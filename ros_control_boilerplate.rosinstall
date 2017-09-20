@@ -1,2 +1,2 @@
-- git: {local-name: teleop_twist_joy, uri: 'https://github.com/FRC900/ros_control_boilerplate.git'}
+- git: {local-name: ros_control_boilerplate, uri: 'https://github.com/FRC900/ros_control_boilerplate.git'}
 
