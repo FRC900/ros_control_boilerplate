@@ -33,39 +33,32 @@
  *********************************************************************/
 
 /* Author: Dave Coleman
-   Desc:   Example ros_control hardware interface blank template for the RRBot
-           For a more detailed simulation example, see sim_hw_interface.h
+   Desc:   Example ros_control main() entry point for controlling robots in ROS
 */
 
-#ifndef RRBOT_CONTROL__RRBOT_HW_INTERFACE_H
-#define RRBOT_CONTROL__RRBOT_HW_INTERFACE_H
+#include <ros_control_boilerplate/generic_hw_control_loop.h>
+#include <frcrobot_control/frcrobot_hw_interface.h>
 
-#include <ros_control_boilerplate/generic_hw_interface.h>
-
-namespace rrbot_control
+int main(int argc, char** argv)
 {
+  ros::init(argc, argv, "frcrobot_hw_interface");
+  ros::NodeHandle nh;
 
-/// \brief Hardware interface for a robot
-class RRBotHWInterface : public ros_control_boilerplate::GenericHWInterface
-{
-public:
-  /**
-   * \brief Constructor
-   * \param nh - Node handle for topics.
-   */
-  RRBotHWInterface(ros::NodeHandle& nh, urdf::Model* urdf_model = NULL);
+  // NOTE: We run the ROS loop in a separate thread as external calls such
+  // as service callbacks to load controllers can block the (main) control loop
+  ros::AsyncSpinner spinner(2);
+  spinner.start();
 
-  /** \brief Read the state from the robot hardware. */
-  virtual void read(ros::Duration &elapsed_time);
+  // Create the hardware interface specific to your robot
+  boost::shared_ptr<frcrobot_control::FRCRobotHWInterface> frcrobot_hw_interface
+    (new frcrobot_control::FRCRobotHWInterface(nh));
+  frcrobot_hw_interface->init();
 
-  /** \brief Write the command to the robot hardware. */
-  virtual void write(ros::Duration &elapsed_time);
+  // Start the control loop
+  ros_control_boilerplate::GenericHWControlLoop control_loop(nh, frcrobot_hw_interface);
 
-  /** \breif Enforce limits for all values before writing */
-  virtual void enforceLimits(ros::Duration &period);
+  // Wait until shutdown signal recieved
+  ros::waitForShutdown();
 
-};  // class
-
-}  // namespace
-
-#endif
+  return 0;
+}

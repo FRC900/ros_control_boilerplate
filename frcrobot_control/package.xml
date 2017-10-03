@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package>
-  <name>rrbot_control</name>
+  <name>frcrobot_control</name>
   <version>0.0.1</version>
-  <description>Simple simulation interface and template for setting up a hardware interface for rrbot</description>
+  <description>Simple simulation interface and template for setting up a hardware interface for frcrobot</description>
 
   <maintainer email="someone@someone.com">Someone</maintainer>
 

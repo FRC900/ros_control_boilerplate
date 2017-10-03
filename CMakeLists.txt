@@ -138,7 +138,7 @@ target_link_libraries(${PROJECT_NAME}_keyboard_teleop
   ${catkin_LIBRARIES}
 )
 
-add_subdirectory(rrbot_control)
+add_subdirectory(frcrobot_control)
 
 ## Install ------------------------------------------------------------
 

@@ -33,22 +33,22 @@
  *********************************************************************/
 
 /* Author: Dave Coleman
-   Desc:   Example ros_control hardware interface blank template for the RRBot
+   Desc:   Example ros_control hardware interface blank template for the FRCRobot
            For a more detailed simulation example, see sim_hw_interface.cpp
 */
 
-#include <rrbot_control/rrbot_hw_interface.h>
+#include <frcrobot_control/frcrobot_hw_interface.h>
 
-namespace rrbot_control
+namespace frcrobot_control
 {
 
-RRBotHWInterface::RRBotHWInterface(ros::NodeHandle &nh, urdf::Model *urdf_model)
+FRCRobotHWInterface::FRCRobotHWInterface(ros::NodeHandle &nh, urdf::Model *urdf_model)
   : ros_control_boilerplate::GenericHWInterface(nh, urdf_model)
 {
-  ROS_INFO_NAMED("rrbot_hw_interface", "RRBotHWInterface Ready.");
+  ROS_INFO_NAMED("frcrobot_hw_interface", "FRCRobotHWInterface Ready.");
 }
 
-void RRBotHWInterface::read(ros::Duration &elapsed_time)
+void FRCRobotHWInterface::read(ros::Duration &elapsed_time)
 {
   // ----------------------------------------------------
   // ----------------------------------------------------
@@ -61,7 +61,7 @@ void RRBotHWInterface::read(ros::Duration &elapsed_time)
   // ----------------------------------------------------
 }
 
-void RRBotHWInterface::write(ros::Duration &elapsed_time)
+void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 {
   // Safety
   enforceLimits(elapsed_time);
@@ -86,7 +86,7 @@ void RRBotHWInterface::write(ros::Duration &elapsed_time)
   // ----------------------------------------------------
 }
 
-void RRBotHWInterface::enforceLimits(ros::Duration &period)
+void FRCRobotHWInterface::enforceLimits(ros::Duration &period)
 {
   // ----------------------------------------------------
   // ----------------------------------------------------
