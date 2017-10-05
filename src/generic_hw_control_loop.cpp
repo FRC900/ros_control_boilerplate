@@ -66,7 +66,7 @@ GenericHWControlLoop::GenericHWControlLoop(
   non_realtime_loop_ = nh_.createTimer(desired_update_freq, &GenericHWControlLoop::update, this);
 }
 
-void GenericHWControlLoop::update(const ros::TimerEvent& e)
+void GenericHWControlLoop::update(const ros::TimerEvent& /*e*/)
 {
   // Get change in time
   clock_gettime(CLOCK_MONOTONIC, &current_time_);

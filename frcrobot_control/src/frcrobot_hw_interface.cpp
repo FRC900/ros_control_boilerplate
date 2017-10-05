@@ -48,7 +48,7 @@ FRCRobotHWInterface::FRCRobotHWInterface(ros::NodeHandle &nh, urdf::Model *urdf_
   ROS_INFO_NAMED("frcrobot_hw_interface", "FRCRobotHWInterface Ready.");
 }
 
-void FRCRobotHWInterface::read(ros::Duration &elapsed_time)
+void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 {
   // ----------------------------------------------------
   // ----------------------------------------------------

@@ -104,7 +104,9 @@ void GenericHWInterface::init()
 
     hardware_interface::JointHandle joint_handle_effort = hardware_interface::JointHandle(
         joint_state_interface_.getHandle(joint_names_[joint_id]), &joint_effort_command_[joint_id]);
+#if 0 // KCJ : we don't have effort interface ability (yet)
     effort_joint_interface_.registerHandle(joint_handle_effort);
+#endif
 
     // Load the joint limits
     registerJointLimits(joint_handle_position, joint_handle_velocity, joint_handle_effort, joint_id);

@@ -76,7 +76,7 @@
 int kfd = 0;
 struct termios cooked, raw;
 
-void quit(int sig)
+void quit(int /*sig*/)
 {
   tcsetattr(kfd, TCSANOW, &cooked);
   exit(0);

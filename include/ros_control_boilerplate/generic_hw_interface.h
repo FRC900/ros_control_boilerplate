@@ -92,8 +92,8 @@ public:
    * with regard to necessary hardware interface switches. Start and stop list are disjoint.
    * This is just a check, the actual switch is done in doSwitch()
    */
-  virtual bool canSwitch(const std::list<hardware_interface::ControllerInfo> &start_list,
-                         const std::list<hardware_interface::ControllerInfo> &stop_list) const
+  virtual bool canSwitch(const std::list<hardware_interface::ControllerInfo> &/*start_list*/,
+                         const std::list<hardware_interface::ControllerInfo> &/*stop_list*/) const
   {
     return true;
   }
@@ -103,8 +103,8 @@ public:
    * and stop the given controllers.
    * Start and stop list are disjoint. The feasability was checked in canSwitch() beforehand.
    */
-  virtual void doSwitch(const std::list<hardware_interface::ControllerInfo> &start_list,
-                        const std::list<hardware_interface::ControllerInfo> &stop_list)
+  virtual void doSwitch(const std::list<hardware_interface::ControllerInfo> &/*start_list*/,
+                        const std::list<hardware_interface::ControllerInfo> &/*stop_list*/)
   {
   }
 

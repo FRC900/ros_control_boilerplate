@@ -71,7 +71,7 @@ void SimHWInterface::init()
   ROS_INFO_NAMED(name_, "SimHWInterface Ready.");
 }
 
-void SimHWInterface::read(ros::Duration &elapsed_time)
+void SimHWInterface::read(ros::Duration &/*elapsed_time*/)
 {
   // No need to read since our write() command populates our state for us
 }
