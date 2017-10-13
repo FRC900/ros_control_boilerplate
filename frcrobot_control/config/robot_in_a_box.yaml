@@ -1,0 +1,40 @@
+# ros_control_boilerplate Settings -----------------------
+# Settings for ros_control control loop
+generic_hw_control_loop:
+  loop_hz: 300
+  cycle_time_error_threshold: 0.01
+
+# Settings for ros_control hardware interface
+# Map a name for each valid joint to a CAN id
+hardware_interface:
+   joints:
+       - {name: joint_1, hw_id: 11}
+       - {name: joint_2, hw_id: 9}
+
+   sim_control_mode: 1 # 0: position, 1: velocity
+
+# Create controllers for each joint
+#
+# This one creates the /joint_states topic necessary in ROS
+# It doesn't actually control anything, just takes the internal
+# encoder state used by the hw manager and publishes it as
+# a ROS topic
+joint_state_controller:
+   type:         joint_state_controller/JointStateController
+   publish_rate: 50
+
+# Create a controller called joint1_velocity_controller
+#  That name is used by spawner in the launch file to 
+#  actually start this controller
+# The joint it controls is joint_1
+# The type is a velocity_controller/JointVelocityController
+joint1_velocity_controller:
+    type: velocity_controllers/JointVelocityController
+    joint: joint_1
+
+# Do the same for a second joint. The name is different
+# but the type is the same as the previous controller
+joint2_velocity_controller:
+    type: velocity_controllers/JointVelocityController
+    joint: joint_2
+
