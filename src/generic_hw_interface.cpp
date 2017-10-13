@@ -59,7 +59,37 @@ GenericHWInterface::GenericHWInterface(ros::NodeHandle &nh, urdf::Model *urdf_mo
   // Load rosparams
   ros::NodeHandle rpnh(nh_, "hardware_interface"); // TODO(davetcoleman): change the namespace to "generic_hw_interface" aka name_
   std::size_t error = 0;
-  error += !rosparam_shortcuts::get(name_, rpnh, "joints", joint_names_);
+  // Read a list of joint information from ROS parameters.  Each entry in the list
+  // specifies a name for the joint and a hardware ID corresponding
+  // to that value.  Joint types and locations are specified (by name)
+  // in a URDF file loaded along with the controller.
+  //error += !rosparam_shortcuts::get(name_, rpnh, "joints", joint_names_);
+  XmlRpc::XmlRpcValue joint_param_list;
+  if (!rpnh.getParam("joints", joint_param_list))
+	  throw std::runtime_error("No joints were specified.");
+  for (size_t i = 0; i < joint_param_list.size(); i++)
+  {
+	  XmlRpc::XmlRpcValue &joint_params = joint_param_list[i];
+	  if (!joint_params.hasMember("name"))
+		  throw std::runtime_error("A joint name was not specified");
+	  XmlRpc::XmlRpcValue& xml_joint_name = joint_params["name"];
+	  if (!xml_joint_name.valid() ||
+		   xml_joint_name.getType() != XmlRpc::XmlRpcValue::TypeString)
+		  throw std::runtime_error("An invalid joint name was specified.");
+	  const std::string joint_name_str = xml_joint_name;
+	  joint_names_.push_back(joint_name_str);
+
+	  if (!joint_params.hasMember("hw_id"))
+		  throw std::runtime_error("A joint hw_id was not specified");
+	  XmlRpc::XmlRpcValue& xml_joint_hw_id = joint_params["hw_id"];
+	  if (!xml_joint_hw_id.valid() ||
+		   xml_joint_hw_id.getType() != XmlRpc::XmlRpcValue::TypeInt)
+		  throw std::runtime_error("An invalid joint hw_id was specified.");
+	  const int joint_hw_id_str = xml_joint_hw_id;
+	  joint_hw_ids_.push_back(joint_hw_id_str);
+	  // Eventually add a list of valid modes for this joint?
+  }
+  
   rosparam_shortcuts::shutdownIfError(name_, error);
 }
 

@@ -33,49 +33,32 @@
  *********************************************************************/
 
 /* Author: Dave Coleman
-   Desc:   Example ros_control hardware interface blank template for the FRCRobot
-           For a more detailed simulation example, see sim_hw_interface.h
+   Desc:   Example ros_control main() entry point for controlling robots in ROS
 */
 
-#ifndef FRCROBOT_CONTROL__FRCROBOT_HW_INTERFACE_H
-#define FRCROBOT_CONTROL__FRCROBOT_HW_INTERFACE_H
+#include <ros_control_boilerplate/generic_hw_control_loop.h>
+#include <frcrobot_control/frcrobot_sim_interface.h>
 
-#include <ros_control_boilerplate/generic_hw_interface.h>
-#include "ctrlib/CanTalonSRX.h"
-
-namespace frcrobot_control
+int main(int argc, char** argv)
 {
+  ros::init(argc, argv, "frcrobot_hw_interface");
+  ros::NodeHandle nh;
 
-/// \brief Hardware interface for a robot
-class FRCRobotHWInterface : public ros_control_boilerplate::GenericHWInterface
-{
-public:
-  /**
-   * \brief Constructor
-   * \param nh - Node handle for topics.
-   */
-  FRCRobotHWInterface(ros::NodeHandle& nh, urdf::Model* urdf_model = NULL);
+  // NOTE: We run the ROS loop in a separate thread as external calls such
+  // as service callbacks to load controllers can block the (main) control loop
+  ros::AsyncSpinner spinner(2);
+  spinner.start();
 
-  /** \brief Read the state from the robot hardware. */
-  virtual void read(ros::Duration &elapsed_time);
+  // Create the hardware interface specific to your robot
+  boost::shared_ptr<frcrobot_control::FRCRobotSimInterface> frcrobot_sim_interface
+    (new frcrobot_control::FRCRobotSimInterface(nh));
+  frcrobot_sim_interface->init();
 
-  /** \brief Write the command to the robot hardware. */
-  virtual void write(ros::Duration &elapsed_time);
+  // Start the control loop
+  ros_control_boilerplate::GenericHWControlLoop control_loop(nh, frcrobot_sim_interface);
 
-  /** \breif Enforce limits for all values before writing */
-  virtual void enforceLimits(ros::Duration &period);
-private:
-  // Desired kMode setting, or -1 if no need to change this 
-  // time through the update loop
-  std::vector<int> joint_mode_command;
+  // Wait until shutdown signal recieved
+  ros::waitForShutdown();
 
-  // Copy of current joint mode
-  std::vector<int> joint_mode_;
-
-  std::vector<std::shared_ptr<CanTalonSRX>> can_talons_;
-
-};  // class
-
-}  // namespace
-
-#endif
+  return 0;
+}

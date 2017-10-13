@@ -37,45 +37,37 @@
            For a more detailed simulation example, see sim_hw_interface.h
 */
 
-#ifndef FRCROBOT_CONTROL__FRCROBOT_HW_INTERFACE_H
-#define FRCROBOT_CONTROL__FRCROBOT_HW_INTERFACE_H
+#pragma once
 
 #include <ros_control_boilerplate/generic_hw_interface.h>
-#include "ctrlib/CanTalonSRX.h"
 
 namespace frcrobot_control
 {
 
 /// \brief Hardware interface for a robot
-class FRCRobotHWInterface : public ros_control_boilerplate::GenericHWInterface
+class FRCRobotSimInterface : public ros_control_boilerplate::GenericHWInterface
 {
-public:
-  /**
-   * \brief Constructor
-   * \param nh - Node handle for topics.
-   */
-  FRCRobotHWInterface(ros::NodeHandle& nh, urdf::Model* urdf_model = NULL);
+	public:
+		/**
+		 * \brief Constructor
+		 * \param nh - Node handle for topics.
+		 */
+		FRCRobotSimInterface(ros::NodeHandle& nh, urdf::Model* urdf_model = NULL);
 
-  /** \brief Read the state from the robot hardware. */
-  virtual void read(ros::Duration &elapsed_time);
+		/** \brief Read the state from the robot hardware. */
+		virtual void read(ros::Duration &elapsed_time);
 
-  /** \brief Write the command to the robot hardware. */
-  virtual void write(ros::Duration &elapsed_time);
+		/** \brief Write the command to the robot hardware. */
+		virtual void write(ros::Duration &elapsed_time);
 
-  /** \breif Enforce limits for all values before writing */
-  virtual void enforceLimits(ros::Duration &period);
-private:
-  // Desired kMode setting, or -1 if no need to change this 
-  // time through the update loop
-  std::vector<int> joint_mode_command;
-
-  // Copy of current joint mode
-  std::vector<int> joint_mode_;
-
-  std::vector<std::shared_ptr<CanTalonSRX>> can_talons_;
+		/** \breif Enforce limits for all values before writing */
+		virtual void enforceLimits(ros::Duration &period);
+	private:
+		// Desired kMode setting, or -1 if no need to change this 
+		// time through the update loop
+		std::vector<int> joint_mode_command;
 
 };  // class
 
 }  // namespace
 
-#endif

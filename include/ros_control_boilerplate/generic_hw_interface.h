@@ -158,6 +158,7 @@ protected:
 
   // Configuration
   std::vector<std::string> joint_names_;
+  std::vector<int>         joint_hw_ids_;
   std::size_t num_joints_;
   urdf::Model *urdf_model_;
 
