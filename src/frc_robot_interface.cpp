@@ -36,7 +36,7 @@
    Desc:   Helper ros_control hardware interface that loads configurations
 */
 
-#include <ros_control_boilerplate/generic_hw_interface.h>
+#include <ros_control_boilerplate/frc_robot_interface.h>
 #include <limits>
 
 // ROS parameter loading
@@ -57,7 +57,7 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
     urdf_model_ = urdf_model;
 
   // Load rosparams
-  ros::NodeHandle rpnh(nh_, "hardware_interface"); // TODO(davetcoleman): change the namespace to "generic_hw_interface" aka name_
+  ros::NodeHandle rpnh(nh_, "hardware_interface"); // TODO(davetcoleman): change the namespace to "frc_robot_interface" aka name_
 
   // Read a list of joint information from ROS parameters.  Each entry in the list
   // specifies a name for the joint and a hardware ID corresponding

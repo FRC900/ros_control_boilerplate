@@ -12,7 +12,7 @@ add_executable(frcrobot_sim_main
 	src/frcrobot_sim_interface.cpp
 	)
 target_link_libraries(frcrobot_sim_main
-	generic_hw_interface
+	frc_robot_interface
 	generic_hw_control_loop
 	${catkin_LIBRARIES}
 )
@@ -37,7 +37,7 @@ if (DEFINED CMAKE_TOOLCHAIN_FILE)
 	set (WPI_LIB_DIR  $ENV{HOME}/wpilib/cpp/current/lib)
 	target_link_libraries(frcrobot_hw_main
 	  ${catkin_LIBRARIES}
-	  generic_hw_interface
+	  frc_robot_interface
 	  generic_hw_control_loop
 	  ${CTRE_LIB_DIR}/libCTRLibDriver.a
 	  ${CTRE_LIB_DIR}/libCTRLib.a

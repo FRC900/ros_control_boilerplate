@@ -37,8 +37,9 @@
    using MONOTOIC system time
 */
 
+#pragma once
 #include <time.h>
-#include <ros_control_boilerplate/generic_hw_interface.h>
+#include <ros_control_boilerplate/frc_robot_interface.h>
 
 namespace ros_control_boilerplate
 {

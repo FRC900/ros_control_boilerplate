@@ -46,7 +46,7 @@ catkin_package(
     rosparam_shortcuts
   LIBRARIES
     generic_hw_control_loop
-    generic_hw_interface
+    frc_robot_interface
 	#sim_hw_interface
 )
 
@@ -69,10 +69,10 @@ target_link_libraries(generic_hw_control_loop
 )
 
 # Generic Hardware Interface
-add_library(generic_hw_interface
-  src/generic_hw_interface.cpp
+add_library(frc_robot_interface
+  src/frc_robot_interface.cpp
 )
-target_link_libraries(generic_hw_interface
+target_link_libraries(frc_robot_interface
   ${catkin_LIBRARIES}
 )
 
@@ -81,7 +81,7 @@ target_link_libraries(generic_hw_interface
 #src/sim_hw_interface.cpp
 #)
 #target_link_libraries(sim_hw_interface
-#generic_hw_interface
+#frc_robot_interface
 #${catkin_LIBRARIES}
 #)
 
@@ -143,7 +143,7 @@ add_subdirectory(frcrobot_control)
 # Install libraries
 install(TARGETS
     generic_hw_control_loop
-    generic_hw_interface
+    frc_robot_interface
 	#sim_hw_interface
     controller_to_csv
     csv_to_controller

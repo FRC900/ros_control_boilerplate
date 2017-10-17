@@ -39,7 +39,7 @@
 
 #pragma once
 
-#include <ros_control_boilerplate/generic_hw_interface.h>
+#include <ros_control_boilerplate/frc_robot_interface.h>
 
 namespace frcrobot_control
 {
@@ -70,4 +70,3 @@ class FRCRobotSimInterface : public ros_control_boilerplate::FRCRobotInterface
 };  // class
 
 }  // namespace
-

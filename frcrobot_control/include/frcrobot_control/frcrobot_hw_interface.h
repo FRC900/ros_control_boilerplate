@@ -37,10 +37,9 @@
            For a more detailed simulation example, see sim_hw_interface.h
 */
 
-#ifndef FRCROBOT_CONTROL__FRCROBOT_HW_INTERFACE_H
-#define FRCROBOT_CONTROL__FRCROBOT_HW_INTERFACE_H
+#pragma once
 
-#include <ros_control_boilerplate/generic_hw_interface.h>
+#include <ros_control_boilerplate/frc_robot_interface.h>
 #include <ctrlib/CanTalonSRX.h>
 
 namespace frcrobot_control
@@ -74,4 +73,3 @@ private:
 
 }  // namespace
 
-#endif

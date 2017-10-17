@@ -38,10 +38,6 @@
 */
 
 #pragma once
-#define GENERIC_ROS_CONTROL_GENERIC_HW_INTERFACE_H
-
-// C++
-//#include <boost/scoped_ptr.hpp>
 
 // ROS
 #include <ros/ros.h>
@@ -49,8 +45,6 @@
 
 // ROS Controls
 #include <hardware_interface/robot_hw.h>
-#include <hardware_interface/joint_state_interface.h>
-#include <hardware_interface/joint_command_interface.h>
 #include <talon_interface/talon_interface.h>
 #include <controller_manager/controller_manager.h>
 #include <joint_limits_interface/joint_limits.h>
@@ -172,20 +166,13 @@ protected:
   bool use_rosparam_joint_limits_;
   bool use_soft_limits_if_available_;
 
-  // States
-#if 0
-  std::vector<double> joint_position_;
-  std::vector<double> joint_velocity_;
-  std::vector<double> joint_effort_;
-#endif
 
+  // Array holding master cached state of hardware
+  // resources
   std::vector<hardware_interface::TalonHWState> talon_state_;
-  // Commands
-#if 0
-  std::vector<double> joint_position_command_;
-  std::vector<double> joint_velocity_command_;
-  std::vector<double> joint_effort_command_;
-#endif
+
+  // Same as above, but for pending commands to be
+  // written to the hardware
   std::vector<hardware_interface::TalonHWCommand> talon_command_;
 
   // Copy of limits, in case we need them later in our control stack
