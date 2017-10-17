@@ -37,11 +37,11 @@
    simulation
 */
 
-#ifndef GENERIC_ROS_CONTROL_GENERIC_HW_INTERFACE_H
+#pragma once
 #define GENERIC_ROS_CONTROL_GENERIC_HW_INTERFACE_H
 
 // C++
-#include <boost/scoped_ptr.hpp>
+//#include <boost/scoped_ptr.hpp>
 
 // ROS
 #include <ros/ros.h>
@@ -51,6 +51,7 @@
 #include <hardware_interface/robot_hw.h>
 #include <hardware_interface/joint_state_interface.h>
 #include <hardware_interface/joint_command_interface.h>
+#include <talon_interface/talon_interface.h>
 #include <controller_manager/controller_manager.h>
 #include <joint_limits_interface/joint_limits.h>
 #include <joint_limits_interface/joint_limits_interface.h>
@@ -61,7 +62,7 @@ namespace ros_control_boilerplate
 {
 
 /// \brief Hardware interface for a robot
-class GenericHWInterface : public hardware_interface::RobotHW
+class FRCRobotInterface : public hardware_interface::RobotHW
 {
 public:
   /**
@@ -69,10 +70,10 @@ public:
    * \param nh - Node handle for topics.
    * \param urdf - optional pointer to a parsed robot model
    */
-  GenericHWInterface(ros::NodeHandle &nh, urdf::Model *urdf_model = NULL);
+  FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_model = NULL);
 
   /** \brief Destructor */
-  virtual ~GenericHWInterface() {}
+  virtual ~FRCRobotInterface() {}
 
   /** \brief Initialize the hardware interface */
   virtual void init();
@@ -142,9 +143,14 @@ protected:
 
   // Hardware interfaces
   hardware_interface::JointStateInterface joint_state_interface_;
+  hardware_interface::TalonStateInterface talon_state_interface_;
+
+#if 0
   hardware_interface::PositionJointInterface position_joint_interface_;
   hardware_interface::VelocityJointInterface velocity_joint_interface_;
   hardware_interface::EffortJointInterface effort_joint_interface_;
+#endif
+  hardware_interface::TalonCommandInterface talon_command_interface_;
 
   // Joint limits interfaces - Saturation
   joint_limits_interface::PositionJointSaturationInterface pos_jnt_sat_interface_;
@@ -167,14 +173,20 @@ protected:
   bool use_soft_limits_if_available_;
 
   // States
+#if 0
   std::vector<double> joint_position_;
   std::vector<double> joint_velocity_;
   std::vector<double> joint_effort_;
+#endif
 
+  std::vector<hardware_interface::TalonHWState> talon_state_;
   // Commands
+#if 0
   std::vector<double> joint_position_command_;
   std::vector<double> joint_velocity_command_;
   std::vector<double> joint_effort_command_;
+#endif
+  std::vector<hardware_interface::TalonHWCommand> talon_command_;
 
   // Copy of limits, in case we need them later in our control stack
   std::vector<double> joint_position_lower_limits_;
@@ -185,5 +197,3 @@ protected:
 };  // class
 
 }  // namespace
-
-#endif // GENERIC_ROS_CONTROL_GENERIC_HW_INTERFACE_H

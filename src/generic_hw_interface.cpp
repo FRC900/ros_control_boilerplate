@@ -44,7 +44,7 @@
 
 namespace ros_control_boilerplate
 {
-GenericHWInterface::GenericHWInterface(ros::NodeHandle &nh, urdf::Model *urdf_model)
+FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_model)
   : name_("generic_hw_interface")
   , nh_(nh)
   , use_rosparam_joint_limits_(false)
@@ -58,11 +58,12 @@ GenericHWInterface::GenericHWInterface(ros::NodeHandle &nh, urdf::Model *urdf_mo
 
   // Load rosparams
   ros::NodeHandle rpnh(nh_, "hardware_interface"); // TODO(davetcoleman): change the namespace to "generic_hw_interface" aka name_
-  std::size_t error = 0;
+
   // Read a list of joint information from ROS parameters.  Each entry in the list
   // specifies a name for the joint and a hardware ID corresponding
   // to that value.  Joint types and locations are specified (by name)
   // in a URDF file loaded along with the controller.
+  //std::size_t error = 0;
   //error += !rosparam_shortcuts::get(name_, rpnh, "joints", joint_names_);
   XmlRpc::XmlRpcValue joint_param_list;
   if (!rpnh.getParam("joints", joint_param_list))
@@ -90,13 +91,49 @@ GenericHWInterface::GenericHWInterface(ros::NodeHandle &nh, urdf::Model *urdf_mo
 	  // Eventually add a list of valid modes for this joint?
   }
   
-  rosparam_shortcuts::shutdownIfError(name_, error);
+  //rosparam_shortcuts::shutdownIfError(name_, error);
 }
 
-void GenericHWInterface::init()
+void FRCRobotInterface::init()
 {
-  num_joints_ = joint_names_.size();
+	num_joints_ = joint_names_.size();
+	// Create vectors of the correct size for
+	// talon HW state and commands
+	talon_state_.resize(num_joints_);
+	talon_command_.resize(num_joints_);
 
+	// Loop through the list of joint names
+	// specified as params for the hardware_interface.
+	// For each of them, create a Talon object. This
+	// object is used to send and recieve commands
+	// and status to/from the physical Talon motor
+	// controller on the robot.  Use this pointer
+	// to initialize each Talon with various params
+	// set for that motor controller in config files.
+	for (size_t i = 0; i < num_joints_; i++)
+	{
+		ROS_INFO_STREAM_NAMED(name_, "FRCRobotHWInterface: Loading joint name: " << joint_names_[i] << " at hw ID " << joint_hw_ids_[i]);
+
+		// Create joint state interface
+		// Register as JointStateInterface so that legacy
+		// ROS code which uses that object type can 
+		// access basic state info from the talon
+		// Code which needs more specific status should
+		// get a TalonStateHandle instead.
+		hardware_interface::TalonStateHandle tsh(joint_names_[i], &talon_state_[i]);
+		joint_state_interface_.registerHandle(*(dynamic_cast<hardware_interface::JointStateHandle *>(&tsh)));
+		talon_state_interface_.registerHandle(tsh);
+
+		// Add command interfaces to joints
+		// TODO: decide based on transmissions?
+		hardware_interface::TalonCommandHandle talon_command_handle(tsh, &talon_command_[i]);
+		talon_command_interface_.registerHandle(talon_command_handle);
+	}
+	registerInterface(&talon_state_interface_);
+	registerInterface(&joint_state_interface_);
+	registerInterface(&talon_command_interface_);
+
+#if 0
   // Status
   joint_position_.resize(num_joints_, 0.0);
   joint_velocity_.resize(num_joints_, 0.0);
@@ -106,6 +143,7 @@ void GenericHWInterface::init()
   joint_position_command_.resize(num_joints_, 0.0);
   joint_velocity_command_.resize(num_joints_, 0.0);
   joint_effort_command_.resize(num_joints_, 0.0);
+#endif
 
   // Limits
   joint_position_lower_limits_.resize(num_joints_, 0.0);
@@ -113,6 +151,7 @@ void GenericHWInterface::init()
   joint_velocity_limits_.resize(num_joints_, 0.0);
   joint_effort_limits_.resize(num_joints_, 0.0);
 
+#if 0
   // Initialize interfaces for each joint
   for (std::size_t joint_id = 0; joint_id < num_joints_; ++joint_id)
   {
@@ -142,15 +181,17 @@ void GenericHWInterface::init()
     registerJointLimits(joint_handle_position, joint_handle_velocity, joint_handle_effort, joint_id);
   }  // end for each joint
 
+
   registerInterface(&joint_state_interface_);     // From RobotHW base class.
   registerInterface(&position_joint_interface_);  // From RobotHW base class.
   registerInterface(&velocity_joint_interface_);  // From RobotHW base class.
   registerInterface(&effort_joint_interface_);    // From RobotHW base class.
+#endif
 
-  ROS_INFO_STREAM_NAMED(name_, "GenericHWInterface Ready.");
+  ROS_INFO_STREAM_NAMED(name_, "FRCRobotInterface Ready.");
 }
 
-void GenericHWInterface::registerJointLimits(const hardware_interface::JointHandle &joint_handle_position,
+void FRCRobotInterface::registerJointLimits(const hardware_interface::JointHandle &joint_handle_position,
                                              const hardware_interface::JointHandle &joint_handle_velocity,
                                              const hardware_interface::JointHandle &joint_handle_effort,
                                              std::size_t joint_id)
@@ -290,50 +331,50 @@ void GenericHWInterface::registerJointLimits(const hardware_interface::JointHand
   }
 }
 
-void GenericHWInterface::reset()
+void FRCRobotInterface::reset()
 {
   // Reset joint limits state, in case of mode switch or e-stop
   pos_jnt_sat_interface_.reset();
   pos_jnt_soft_limits_.reset();
 }
 
-void GenericHWInterface::printState()
+void FRCRobotInterface::printState()
 {
   // WARNING: THIS IS NOT REALTIME SAFE
   // FOR DEBUGGING ONLY, USE AT YOUR OWN ROBOT's RISK!
-  ROS_INFO_STREAM_THROTTLE(1, std::endl
-                                  << printStateHelper());
+  ROS_INFO_STREAM_THROTTLE(1, 
+		  std::endl << "State" << 
+		  std::endl << printStateHelper());
 }
 
-std::string GenericHWInterface::printStateHelper()
+std::string FRCRobotInterface::printStateHelper()
 {
   std::stringstream ss;
   std::cout.precision(15);
 
+  ss << "    position     velocity         effort  " << std::endl;
   for (std::size_t i = 0; i < num_joints_; ++i)
   {
-    ss << "j" << i << ": " << std::fixed << joint_position_[i] << "\t ";
-    ss << std::fixed << joint_velocity_[i] << "\t ";
-    ss << std::fixed << joint_effort_[i] << std::endl;
+    ss << "j" << i << ": " << std::fixed << talon_state_[i].getPosition() << "\t ";
+    ss << std::fixed << talon_state_[i].getSpeed() << "\t ";
+    ss << std::fixed << talon_state_[i].getOutputVoltage() << std::endl;
   }
   return ss.str();
 }
 
-std::string GenericHWInterface::printCommandHelper()
+std::string FRCRobotInterface::printCommandHelper()
 {
   std::stringstream ss;
   std::cout.precision(15);
-  ss << "    position     velocity         effort  \n";
+  ss << "    setpoint" << std::endl;
   for (std::size_t i = 0; i < num_joints_; ++i)
   {
-    ss << "j" << i << ": " << std::fixed << joint_position_command_[i] << "\t ";
-    ss << std::fixed << joint_velocity_command_[i] << "\t ";
-    ss << std::fixed << joint_effort_command_[i] << std::endl;
+    ss << "j" << i << ": " << std::fixed << talon_command_[i].get() << std::endl;
   }
   return ss.str();
 }
 
-void GenericHWInterface::loadURDF(ros::NodeHandle &nh, std::string param_name)
+void FRCRobotInterface::loadURDF(ros::NodeHandle &nh, std::string param_name)
 {
   std::string urdf_string;
   urdf_model_ = new urdf::Model();

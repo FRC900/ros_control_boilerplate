@@ -44,7 +44,7 @@ namespace frcrobot_control
 
 FRCRobotSimInterface::FRCRobotSimInterface(ros::NodeHandle &nh, 
 		                                   urdf::Model *urdf_model)
-	: ros_control_boilerplate::GenericHWInterface(nh, urdf_model)
+	: ros_control_boilerplate::FRCRobotInterface(nh, urdf_model)
 {
 	// Loop through the list of joint names
 	// specified as params for the hardware_interface.
@@ -95,13 +95,16 @@ void FRCRobotSimInterface::write(ros::Duration &elapsed_time)
 	// Maybe do a eStop / enabled check instead?
 	//enforceLimits(elapsed_time);
 
-	ROS_INFO_STREAM_THROTTLE(1, std::endl << std::string(__FILE__) << ":" << __LINE__ << std::endl << printCommandHelper());
+	ROS_INFO_STREAM_THROTTLE(1, 
+			std::endl << std::string(__FILE__) << ":" << __LINE__ << 
+			std::endl << "Command" << std::endl << printCommandHelper());
 
 	for (std::size_t joint_id = 0; joint_id < num_joints_; ++joint_id)
 	{
 		// Assume instant acceleration for now
-		joint_velocity_[joint_id] = joint_velocity_command_[joint_id];
-		joint_position_[joint_id] += joint_velocity_command_[joint_id] * elapsed_time.toSec();
+		double speed = talon_command_[joint_id].get();
+		talon_state_[joint_id].setPosition(talon_state_[joint_id].getPosition() + speed * elapsed_time.toSec());
+		talon_state_[joint_id].setSpeed(speed);
 	}
 }
 

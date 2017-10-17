@@ -28,13 +28,13 @@ joint_state_controller:
 #  actually start this controller
 # The joint it controls is joint_1
 # The type is a velocity_controller/JointVelocityController
-joint1_velocity_controller:
-    type: velocity_controllers/JointVelocityController
+joint1_talon_controller:
+    type: talon_controllers/TalonController
     joint: joint_1
 
 # Do the same for a second joint. The name is different
 # but the type is the same as the previous controller
-joint2_velocity_controller:
-    type: velocity_controllers/JointVelocityController
+joint2_talon_controller:
+    type: talon_controllers/TalonController
     joint: joint_2
 

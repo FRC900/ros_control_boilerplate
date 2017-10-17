@@ -3,9 +3,6 @@ project(ros_control_boilerplate)
 
 include ("../cmake_modules/CMakeOpt.cmake")
 
-# C++ 11
-set(CMAKE_CXX_FLAGS "-std=c++11 -Wall ${CMAKE_CXX_FLAGS}")
-
 find_package(catkin REQUIRED COMPONENTS
   cmake_modules
   hardware_interface
@@ -21,6 +18,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   sensor_msgs
   rosparam_shortcuts
+  talon_interface
 )
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
@@ -49,7 +47,7 @@ catkin_package(
   LIBRARIES
     generic_hw_control_loop
     generic_hw_interface
-    sim_hw_interface
+	#sim_hw_interface
 )
 
 ###########
@@ -79,22 +77,22 @@ target_link_libraries(generic_hw_interface
 )
 
 # Simulation Hardware Interface
-add_library(sim_hw_interface
-  src/sim_hw_interface.cpp
-)
-target_link_libraries(sim_hw_interface
-  generic_hw_interface
-  ${catkin_LIBRARIES}
-)
+#add_library(sim_hw_interface
+#src/sim_hw_interface.cpp
+#)
+#target_link_libraries(sim_hw_interface
+#generic_hw_interface
+#${catkin_LIBRARIES}
+#)
 
 # Main control executable
-add_executable(${PROJECT_NAME}_sim_hw_main src/sim_hw_main.cpp)
-set_target_properties(${PROJECT_NAME}_sim_hw_main PROPERTIES OUTPUT_NAME sim_hw_main PREFIX "")
-target_link_libraries(${PROJECT_NAME}_sim_hw_main
-  sim_hw_interface
-  generic_hw_control_loop
-  ${catkin_LIBRARIES}
-)
+#add_executable(${PROJECT_NAME}_sim_hw_main src/sim_hw_main.cpp)
+#set_target_properties(${PROJECT_NAME}_sim_hw_main PROPERTIES OUTPUT_NAME sim_hw_main PREFIX "")
+#target_link_libraries(${PROJECT_NAME}_sim_hw_main
+#sim_hw_interface
+#generic_hw_control_loop
+#${catkin_LIBRARIES}
+#)
 
 # Test trajectory generator node
 add_executable(${PROJECT_NAME}_test_trajectory src/tools/test_trajectory.cpp)
@@ -146,7 +144,7 @@ add_subdirectory(frcrobot_control)
 install(TARGETS
     generic_hw_control_loop
     generic_hw_interface
-    sim_hw_interface
+	#sim_hw_interface
     controller_to_csv
     csv_to_controller
   LIBRARY DESTINATION
@@ -155,7 +153,7 @@ install(TARGETS
 
 # Install executables
 install(TARGETS
-    ${PROJECT_NAME}_sim_hw_main
+	#${PROJECT_NAME}_sim_hw_main
     ${PROJECT_NAME}_test_trajectory
     ${PROJECT_NAME}_controller_to_csv_main
     ${PROJECT_NAME}_csv_to_controller_main

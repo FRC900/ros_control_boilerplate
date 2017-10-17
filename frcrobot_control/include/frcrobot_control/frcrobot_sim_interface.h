@@ -45,7 +45,7 @@ namespace frcrobot_control
 {
 
 /// \brief Hardware interface for a robot
-class FRCRobotSimInterface : public ros_control_boilerplate::GenericHWInterface
+class FRCRobotSimInterface : public ros_control_boilerplate::FRCRobotInterface
 {
 	public:
 		/**

@@ -62,7 +62,7 @@ public:
    */
   GenericHWControlLoop(
       ros::NodeHandle& nh,
-      boost::shared_ptr<ros_control_boilerplate::GenericHWInterface> hardware_interface);
+      boost::shared_ptr<ros_control_boilerplate::FRCRobotInterface> hardware_interface);
 
   /** \brief Timer event
    *         Note: we do not use the TimerEvent time difference because it does NOT guarantee that
@@ -98,7 +98,7 @@ protected:
   boost::shared_ptr<controller_manager::ControllerManager> controller_manager_;
 
   /** \brief Abstract Hardware Interface for your robot */
-  boost::shared_ptr<ros_control_boilerplate::GenericHWInterface> hardware_interface_;
+  boost::shared_ptr<ros_control_boilerplate::FRCRobotInterface> hardware_interface_;
 
 };  // end class
 
