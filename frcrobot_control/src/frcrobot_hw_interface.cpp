@@ -43,23 +43,7 @@
 #include <frcrobot_control/frcrobot_hw_interface.h>
 #include "HAL/DriverStation.h"
 #include "HAL/HAL.h"
-
-static void keepalive() {
-  while (true) {
-		ROS_INFO_STREAM("FRCRobotHWInterface: wait for DS data");
-		// Throws exception here somehow?
-    HAL_WaitForDSData();
-
-		ROS_INFO_STREAM("FRCRobotHWInterface: observe");
-    HAL_ObserveUserProgramStarting();
-    HAL_ObserveUserProgramDisabled();
-    HAL_ObserveUserProgramAutonomous();
-    HAL_ObserveUserProgramTeleop();
-    HAL_ObserveUserProgramTest();
-
-    usleep(10000);
-  }
-}
+#include "Joystick.h"
 
 namespace frcrobot_control
 {
@@ -69,6 +53,36 @@ FRCRobotHWInterface::FRCRobotHWInterface(ros::NodeHandle &nh, urdf::Model *urdf_
 {
 }
 
+FRCRobotHWInterface::~FRCRobotHWInterface()
+{
+	run_hal_thread_ = false;
+	hal_thread_.join();
+}
+
+void FRCRobotHWInterface::hal_keepalive_thread(void) {
+	// Just throw a basic IterativeRobot in here instead?
+	run_hal_thread_ = true;
+	robot_.StartCompetition();
+	Joystick joystick(1);
+	while (run_hal_thread_) {
+		ROS_INFO_STREAM("FRCRobotHWInterface: one iteration of robot_");
+		robot_.OneIteration();
+		// Things to keep track of
+		//    Alliance Station Id
+		//    Robot / match mode (auto, teleop, test, disabled)
+		//    Match time
+		match_time_state_ = DriverStation::GetInstance().GetMatchTime();
+		//    Joystick inputs
+		joystick_state_[0].x = joystick.GetX();
+		joystick_state_[0].y = joystick.GetY();
+		joystick_state_[0].z = joystick.GetZ();
+		//    Maybe e-stop, FMS attached, ds attached
+		// Could do most of these via dummy joint handles. Since
+		// they read-only, create bogus state handles for them
+		// pointing to member vars in the FRCRobotInterface / FRCRobotHWInterface
+	}
+}
+
 void FRCRobotHWInterface::init(void)
 {
 	// Do base class init. This loads common interface info
@@ -76,20 +90,16 @@ void FRCRobotHWInterface::init(void)
 	FRCRobotInterface::init();
 
 #if 0
-	std::cout << "Initializing HAL..." << std::endl;
-	if (HAL_Initialize(0)) {
-		std::cout << "HAL initialized!" << std::endl;
+	ROS_INFO_NAMED("frcrobot_hw_interface", "Initializing HAL...");
+	if (HAL_Initialize(0,0)) {
+		ROS_INFO_STREAM_NAMED("frcrobot_hw_interface", "Success" << std::endl);
 	}
 	else {
-		std::cout << "HAL initialization failed" << std::endl;
+		ROS_WARN_STREAM_NAMED("frcrobot_hw_interface", "HAL initialization failed" << std::endl);
 	}
 
-	// Must call this function in order for the driver station to display robot
-	// code.
-	HAL_ObserveUserProgramStarting();
-
-	std::thread keepaliveThread(keepalive);
 #endif
+	hal_thread_ = std::thread(&FRCRobotHWInterface::hal_keepalive_thread, this);
 
 	for (size_t i = 0; i < num_joints_; i++)
 	{

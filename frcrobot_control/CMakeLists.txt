@@ -34,35 +34,32 @@ if (DEFINED CMAKE_TOOLCHAIN_FILE)
 	)
 	  
 	set (CTRE_LIB_DIR $ENV{HOME}/wpilib/user/cpp/lib)
-	set (WPI_LIB_DIR  $ENV{HOME}/wpilib/cpp/current/lib)
+	set (WPI_LIB_DIR  $ENV{HOME}/wpilib/cpp/current/lib/linux/athena/shared)
+	set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L $ENV{HOME}/allwpilib/build/integrationTestFiles/libs")
 	target_link_libraries(frcrobot_hw_main
 	  ${catkin_LIBRARIES}
 	  frc_robot_interface
 	  generic_hw_control_loop
 	  ${CTRE_LIB_DIR}/libCTRLibDriver.a
 	  ${CTRE_LIB_DIR}/libCTRLib.a
-	  ${WPI_LIB_DIR}/libnirio_emb_can.so
-	  ${WPI_LIB_DIR}/libni_emb.so
-	  ${WPI_LIB_DIR}/libHALAthena.so
-	  ${WPI_LIB_DIR}/libi2c.so
-	  ${WPI_LIB_DIR}/libRoboRIO_FRC_ChipObject.so
-	  ${WPI_LIB_DIR}/libspi.so
-	  ${WPI_LIB_DIR}/libNiFpga.so
-	  ${WPI_LIB_DIR}/libNiFpgaLv.so
-	  ${WPI_LIB_DIR}/libFRC_NetworkCommunication.so
-	  ${WPI_LIB_DIR}/libNiRioSrv.so
-	  ${WPI_LIB_DIR}/libniriodevenum.so
-	  ${WPI_LIB_DIR}/libniriosession.so
-	  ${WPI_LIB_DIR}/libni_rtlog.so
-	  ${WPI_LIB_DIR}/libwpi.so
+	  ${WPI_LIB_DIR}/libFRC_NetworkCommunication.so.18.0.0
+	  ${WPI_LIB_DIR}/libNiFpgaLv.so.17.0.0
+	  ${WPI_LIB_DIR}/libNiFpga.so.17.0.0
+	  ${WPI_LIB_DIR}/libniriodevenum.so.17.0.0
+	  ${WPI_LIB_DIR}/libniriosession.so.17.0.0
+	  ${WPI_LIB_DIR}/libNiRioSrv.so.17.0.0
+	  ${WPI_LIB_DIR}/libRoboRIO_FRC_ChipObject.so.18.0.0
+	  ${WPI_LIB_DIR}/libspi.so.1.0.0
+	  ${WPI_LIB_DIR}/libwpiHal.so
 	  ${WPI_LIB_DIR}/libwpilibc.so
+	  ${WPI_LIB_DIR}/libwpi.so
 	)
 
     ## Install ------------------------------------------------------------
 
     # Install executables
 	install(TARGETS
-		frcrobot_hw_main
+	  frcrobot_hw_main
 	  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 	  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 	)

@@ -68,7 +68,7 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
   XmlRpc::XmlRpcValue joint_param_list;
   if (!rpnh.getParam("joints", joint_param_list))
 	  throw std::runtime_error("No joints were specified.");
-  for (size_t i = 0; i < joint_param_list.size(); i++)
+  for (int i = 0; i < joint_param_list.size(); i++)
   {
 	  XmlRpc::XmlRpcValue &joint_params = joint_param_list[i];
 	  if (!joint_params.hasMember("name"))
@@ -129,6 +129,14 @@ void FRCRobotInterface::init()
 		hardware_interface::TalonCommandHandle talon_command_handle(tsh, &talon_command_[i]);
 		talon_command_interface_.registerHandle(talon_command_handle);
 	}
+	// Publish various FRC-specific data using generic joint state for now
+	// For simple things this might be OK, but for more complex state 
+	// (e.g. joystick) it probably makes more sense to write a
+	// RealtimePublisher() for the data coming in from 
+	// the DS
+	joint_state_interface_.registerHandle(hardware_interface::JointStateHandle("MatchTime", &match_time_state_, &match_time_state_, &match_time_state_));
+	joystick_state_.resize(1);
+	joint_state_interface_.registerHandle(hardware_interface::JointStateHandle("Joystick1", &joystick_state_[0].x, &joystick_state_[0].y, &joystick_state_[0].z));
 	registerInterface(&talon_state_interface_);
 	registerInterface(&joint_state_interface_);
 	registerInterface(&talon_command_interface_);

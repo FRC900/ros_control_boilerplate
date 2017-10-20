@@ -54,6 +54,13 @@
 
 namespace ros_control_boilerplate
 {
+struct JoystickState
+{
+	double x;
+	double y;
+	double z;
+	// Add buttons, triggers, bumpers, etc
+};
 
 /// \brief Hardware interface for a robot
 class FRCRobotInterface : public hardware_interface::RobotHW
@@ -139,11 +146,6 @@ protected:
   hardware_interface::JointStateInterface joint_state_interface_;
   hardware_interface::TalonStateInterface talon_state_interface_;
 
-#if 0
-  hardware_interface::PositionJointInterface position_joint_interface_;
-  hardware_interface::VelocityJointInterface velocity_joint_interface_;
-  hardware_interface::EffortJointInterface effort_joint_interface_;
-#endif
   hardware_interface::TalonCommandInterface talon_command_interface_;
 
   // Joint limits interfaces - Saturation
@@ -166,10 +168,11 @@ protected:
   bool use_rosparam_joint_limits_;
   bool use_soft_limits_if_available_;
 
-
   // Array holding master cached state of hardware
   // resources
   std::vector<hardware_interface::TalonHWState> talon_state_;
+  double match_time_state_;
+  std::vector<JoystickState> joystick_state_;
 
   // Same as above, but for pending commands to be
   // written to the hardware

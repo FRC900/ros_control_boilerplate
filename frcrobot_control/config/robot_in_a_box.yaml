@@ -6,19 +6,37 @@ generic_hw_control_loop:
 
 # Settings for ros_control hardware interface
 # Map a name for each valid joint to a CAN id
+# For future expansion, change hw_id to specify one
+# of several types of HW interface : CAN_id, PWM_id, DIO_id, AIO_id, etc.
 hardware_interface:
    joints:
        - {name: joint_1, hw_id: 11}
        - {name: joint_2, hw_id: 9}
 
+   # Add more data for each joint here - intitial mode, encoder type
+   #    PIDF settings, limit switch settings, etc
+
+   # Not used for now, maybe not used at all if sim
+   # is aware of Talon mode switching
    sim_control_mode: 1 # 0: position, 1: velocity
 
 # Create controllers for each joint
 #
+# Entry is the name of the controller. It can be anything.  
+# It will create a namespace with that name under the main
+# controller namespace. Subscribed topics for that controller
+# will be most often show up under 
+# <top level controller manager ns>/<controller ns>/topic
+# e.g.
+# /frcrobot/joint1_talon_controller/command
+# /frcrobot/joint2_talon_controller/command
+# /frcrobot/joint_states
+#
 # This one creates the /joint_states topic necessary in ROS
 # It doesn't actually control anything, just takes the internal
 # encoder state used by the hw manager and publishes it as
-# a ROS topic
+# a ROS topic.  This is generic ROS stuff, so we'll have
+# to figure out what to map e.g. effort to in the Talon world
 joint_state_controller:
    type:         joint_state_controller/JointStateController
    publish_rate: 50
@@ -26,8 +44,10 @@ joint_state_controller:
 # Create a controller called joint1_velocity_controller
 #  That name is used by spawner in the launch file to 
 #  actually start this controller
-# The joint it controls is joint_1
-# The type is a velocity_controller/JointVelocityController
+# The joint it controls is joint_1. This should match
+# up with one of the names in the top-level joints list
+# above.  
+# The type is a talon_controllers/TalonController
 joint1_talon_controller:
     type: talon_controllers/TalonController
     joint: joint_1

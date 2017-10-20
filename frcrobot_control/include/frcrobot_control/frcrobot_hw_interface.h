@@ -39,11 +39,29 @@
 
 #pragma once
 
+#include <thread>
 #include <ros_control_boilerplate/frc_robot_interface.h>
 #include <ctrlib/CanTalonSRX.h>
+#include <IterativeRobot.h>
+#include <DriverStation.h>
 
 namespace frcrobot_control
 {
+class ROSIterativeRobot : public frc::IterativeRobot
+{
+public: 
+	void StartCompetition(void) 
+	{
+		RobotInit();
+		HAL_ObserveUserProgramStarting();
+	}
+	void OneIteration(void)
+	{
+		// wait for driver station data so the loop doesn't hog the CPU
+		DriverStation::GetInstance().WaitForData();
+		LoopFunc();
+	}
+};
 
 /// \brief Hardware interface for a robot
 class FRCRobotHWInterface : public ros_control_boilerplate::FRCRobotInterface
@@ -54,6 +72,7 @@ public:
    * \param nh - Node handle for topics.
    */
   FRCRobotHWInterface(ros::NodeHandle& nh, urdf::Model* urdf_model = NULL);
+  ~FRCRobotHWInterface();
 
   /** \brief Initialize the hardware interface */
   virtual void init(void);
@@ -66,8 +85,19 @@ public:
 
   /** \breif Enforce limits for all values before writing */
   virtual void enforceLimits(ros::Duration &period);
+ 
+protected:
+  void hal_keepalive_thread(void);
+
 private:
   std::vector<std::shared_ptr<CanTalonSRX>> can_talons_;
+
+  double match_time_;
+
+  std::thread hal_thread_;
+  bool        run_hal_thread_;
+
+  ROSIterativeRobot robot_;
 
 };  // class
 
