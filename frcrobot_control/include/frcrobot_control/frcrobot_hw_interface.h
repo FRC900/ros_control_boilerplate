@@ -44,6 +44,7 @@
 #include <ctrlib/CanTalonSRX.h>
 #include <IterativeRobot.h>
 #include <DriverStation.h>
+#include <LiveWindow/LiveWindow.h>
 
 namespace frcrobot_control
 {
@@ -59,8 +60,59 @@ public:
 	{
 		// wait for driver station data so the loop doesn't hog the CPU
 		DriverStation::GetInstance().WaitForData();
-		LoopFunc();
+		ROS_INFO_STREAM_THROTTLE(1, std::endl << "Returned from DS WaitForData()");
+		//LoopFunc(); -- added for 2018, code from that copied below
+		//               to work with 2017 WPIlib stuff
+		// Call the appropriate function depending upon the current robot mode
+		if (IsDisabled()) {
+			// call DisabledInit() if we are now just entering disabled mode from
+			// either a different mode or from power-on
+			if (m_lastMode != Mode::kDisabled) {
+				LiveWindow::GetInstance()->SetEnabled(false);
+				DisabledInit();
+				m_lastMode = Mode::kDisabled;
+			}
+			HAL_ObserveUserProgramDisabled();
+			DisabledPeriodic();
+		} else if (IsAutonomous()) {
+			// call AutonomousInit() if we are now just entering autonomous mode from
+			// either a different mode or from power-on
+			if (m_lastMode != Mode::kAutonomous) {
+				LiveWindow::GetInstance()->SetEnabled(false);
+				AutonomousInit();
+				m_lastMode = Mode::kAutonomous;
+			}
+			HAL_ObserveUserProgramAutonomous();
+			AutonomousPeriodic();
+		} else if (IsOperatorControl()) {
+			// call TeleopInit() if we are now just entering teleop mode from
+			// either a different mode or from power-on
+			if (m_lastMode != Mode::kTeleop) {
+				LiveWindow::GetInstance()->SetEnabled(false);
+				TeleopInit();
+				m_lastMode = Mode::kTeleop;
+				Scheduler::GetInstance()->SetEnabled(true);
+			}
+			HAL_ObserveUserProgramTeleop();
+			TeleopPeriodic();
+		} else {
+			// call TestInit() if we are now just entering test mode from
+			// either a different mode or from power-on
+			if (m_lastMode != Mode::kTest) {
+				LiveWindow::GetInstance()->SetEnabled(true);
+				TestInit();
+				m_lastMode = Mode::kTest;
+			}
+			HAL_ObserveUserProgramTest();
+			TestPeriodic();
+		}
+		RobotPeriodic();
 	}
+private:
+  enum class Mode { kNone, kDisabled, kAutonomous, kTeleop, kTest };
+
+  Mode m_lastMode = Mode::kNone;
+
 };
 
 /// \brief Hardware interface for a robot

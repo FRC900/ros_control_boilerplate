@@ -1,6 +1,6 @@
-include_directories(
-  include/
-)
+include_directories(include)
+
+#add_definitions(-Wno-unused-parameter -Wno-return-type -Wno-ignored-qualifiers)
 
 # Sim version of main control
 # executable.  For now this just prints debugging
@@ -10,7 +10,7 @@ include_directories(
 add_executable(frcrobot_sim_main 
 	src/frcrobot_sim_main.cpp
 	src/frcrobot_sim_interface.cpp
-	)
+)
 target_link_libraries(frcrobot_sim_main
 	frc_robot_interface
 	generic_hw_control_loop
@@ -19,7 +19,7 @@ target_link_libraries(frcrobot_sim_main
 
 if (DEFINED CMAKE_TOOLCHAIN_FILE)
     # FRCRobot Hardware Interface only
-    # should be build for the RoboRIO since
+    # should be built for the RoboRIO since
     # it direcly interfaces with the RIO
     # hardware & attached devices
 
@@ -28,31 +28,37 @@ if (DEFINED CMAKE_TOOLCHAIN_FILE)
 		src/frcrobot_hw_main.cpp
 		src/frcrobot_hw_interface.cpp
 	)
-	include_directories(
-	  $ENV{HOME}/wpilib/user/cpp/include
-	  $ENV{HOME}/wpilib/cpp/current/include
-	)
+
+    # Switch between 2017 and 2018 beta wpilib code
+    if (0)
+	  include_directories(
+	    $ENV{HOME}/wpilib_2017/user/cpp/include
+	    $ENV{HOME}/wpilib_2017/cpp/current/include
+	  )
 	  
-	set (CTRE_LIB_DIR $ENV{HOME}/wpilib/user/cpp/lib)
-	set (WPI_LIB_DIR  $ENV{HOME}/wpilib/cpp/current/lib/linux/athena/shared)
-	set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L $ENV{HOME}/allwpilib/build/integrationTestFiles/libs")
+	  set (CTRE_LIB_DIR $ENV{HOME}/wpilib_2017/user/cpp/lib)
+	  set (WPI_LIB_DIR  $ENV{HOME}/wpilib_2017/cpp/current/lib)
+
+	else()
+	  include_directories(
+	    $ENV{HOME}/wpilib/user/cpp/include
+	    $ENV{HOME}/wpilib/cpp/current/include
+	  )
+	  
+	  set (CTRE_LIB_DIR $ENV{HOME}/wpilib/user/cpp/lib)
+      set (WPI_LIB_DIR  $ENV{HOME}/wpilib/cpp/current/lib/linux/athena/shared)
+	  set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L $ENV{HOME}/allwpilib/build/integrationTestFiles/libs")
+    endif()
+
+	# Link against CTRE for CAN talon code and wpilib
+	# for HAL, driver station, and so on
 	target_link_libraries(frcrobot_hw_main
-	  ${catkin_LIBRARIES}
-	  frc_robot_interface
-	  generic_hw_control_loop
-	  ${CTRE_LIB_DIR}/libCTRLibDriver.a
-	  ${CTRE_LIB_DIR}/libCTRLib.a
-	  ${WPI_LIB_DIR}/libFRC_NetworkCommunication.so.18.0.0
-	  ${WPI_LIB_DIR}/libNiFpgaLv.so.17.0.0
-	  ${WPI_LIB_DIR}/libNiFpga.so.17.0.0
-	  ${WPI_LIB_DIR}/libniriodevenum.so.17.0.0
-	  ${WPI_LIB_DIR}/libniriosession.so.17.0.0
-	  ${WPI_LIB_DIR}/libNiRioSrv.so.17.0.0
-	  ${WPI_LIB_DIR}/libRoboRIO_FRC_ChipObject.so.18.0.0
-	  ${WPI_LIB_DIR}/libspi.so.1.0.0
-	  ${WPI_LIB_DIR}/libwpiHal.so
-	  ${WPI_LIB_DIR}/libwpilibc.so
-	  ${WPI_LIB_DIR}/libwpi.so
+		${catkin_LIBRARIES}
+		frc_robot_interface
+		generic_hw_control_loop
+		${CTRE_LIB_DIR}/libCTRLibDriver.a
+		${CTRE_LIB_DIR}/libCTRLib.a
+		${WPI_LIB_DIR}/libwpi.so
 	)
 
     ## Install ------------------------------------------------------------
@@ -65,8 +71,15 @@ if (DEFINED CMAKE_TOOLCHAIN_FILE)
 	)
 endif()
 
+	install(TARGETS
+	  frcrobot_sim_main
+	  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+	  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+	)
 # Install header files
-install(DIRECTORY include/frcrobot_control/  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
+install(DIRECTORY 
+	include/frcrobot_control
+	DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
 
 install(DIRECTORY
 	launch

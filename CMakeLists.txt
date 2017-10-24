@@ -47,7 +47,6 @@ catkin_package(
   LIBRARIES
     generic_hw_control_loop
     frc_robot_interface
-	#sim_hw_interface
 )
 
 ###########
@@ -75,24 +74,6 @@ add_library(frc_robot_interface
 target_link_libraries(frc_robot_interface
   ${catkin_LIBRARIES}
 )
-
-# Simulation Hardware Interface
-#add_library(sim_hw_interface
-#src/sim_hw_interface.cpp
-#)
-#target_link_libraries(sim_hw_interface
-#frc_robot_interface
-#${catkin_LIBRARIES}
-#)
-
-# Main control executable
-#add_executable(${PROJECT_NAME}_sim_hw_main src/sim_hw_main.cpp)
-#set_target_properties(${PROJECT_NAME}_sim_hw_main PROPERTIES OUTPUT_NAME sim_hw_main PREFIX "")
-#target_link_libraries(${PROJECT_NAME}_sim_hw_main
-#sim_hw_interface
-#generic_hw_control_loop
-#${catkin_LIBRARIES}
-#)
 
 # Test trajectory generator node
 add_executable(${PROJECT_NAME}_test_trajectory src/tools/test_trajectory.cpp)
@@ -144,7 +125,6 @@ add_subdirectory(frcrobot_control)
 install(TARGETS
     generic_hw_control_loop
     frc_robot_interface
-	#sim_hw_interface
     controller_to_csv
     csv_to_controller
   LIBRARY DESTINATION
@@ -153,7 +133,6 @@ install(TARGETS
 
 # Install executables
 install(TARGETS
-	#${PROJECT_NAME}_sim_hw_main
     ${PROJECT_NAME}_test_trajectory
     ${PROJECT_NAME}_controller_to_csv_main
     ${PROJECT_NAME}_csv_to_controller_main
@@ -163,4 +142,7 @@ install(TARGETS
 )
 
 # Install header files
-install(DIRECTORY include/${PROJECT_NAME}/   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
+install(DIRECTORY 
+	include/${PROJECT_NAME}
+	DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+)

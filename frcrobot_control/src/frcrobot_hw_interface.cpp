@@ -49,7 +49,8 @@ namespace frcrobot_control
 {
 
 FRCRobotHWInterface::FRCRobotHWInterface(ros::NodeHandle &nh, urdf::Model *urdf_model)
-  : ros_control_boilerplate::FRCRobotInterface(nh, urdf_model)
+  : ros_control_boilerplate::FRCRobotInterface(nh, urdf_model),
+	run_hal_thread_(true)
 {
 }
 
@@ -62,20 +63,28 @@ FRCRobotHWInterface::~FRCRobotHWInterface()
 void FRCRobotHWInterface::hal_keepalive_thread(void) {
 	// Just throw a basic IterativeRobot in here instead?
 	run_hal_thread_ = true;
-	robot_.StartCompetition();
-	Joystick joystick(1);
+	Joystick joystick(0);
 	while (run_hal_thread_) {
-		ROS_INFO_STREAM("FRCRobotHWInterface: one iteration of robot_");
+	ROS_INFO_NAMED("frcrobot_hw_interface thread", "Starting 1 iteraion");
 		robot_.OneIteration();
+	ROS_INFO_NAMED("frcrobot_hw_interface thread", "Ending 1 iteraion");
 		// Things to keep track of
 		//    Alliance Station Id
 		//    Robot / match mode (auto, teleop, test, disabled)
 		//    Match time
 		match_time_state_ = DriverStation::GetInstance().GetMatchTime();
-		//    Joystick inputs
+		//    Joystick state
+		//    This is for testing. Need to expand this
+		//    to include buttons, the ability to set
+		//    rumble state via an external joystick
+		//    controller, etc.  Need to set via config
+		//    files.
 		joystick_state_[0].x = joystick.GetX();
 		joystick_state_[0].y = joystick.GetY();
 		joystick_state_[0].z = joystick.GetZ();
+		std::cout << "Joystick_state = " << joystick_state_[0].x << " "
+			<< joystick_state_[0].y << " "
+			<< joystick_state_[0].z << " " << std::endl;
 		//    Maybe e-stop, FMS attached, ds attached
 		// Could do most of these via dummy joint handles. Since
 		// they read-only, create bogus state handles for them
@@ -89,16 +98,10 @@ void FRCRobotHWInterface::init(void)
 	// used by both the real and sim interfaces
 	FRCRobotInterface::init();
 
-#if 0
-	ROS_INFO_NAMED("frcrobot_hw_interface", "Initializing HAL...");
-	if (HAL_Initialize(0,0)) {
-		ROS_INFO_STREAM_NAMED("frcrobot_hw_interface", "Success" << std::endl);
-	}
-	else {
-		ROS_WARN_STREAM_NAMED("frcrobot_hw_interface", "HAL initialization failed" << std::endl);
-	}
-
-#endif
+	// Make sure to initialize WPIlib code before creating
+	// a CAN Talon object to avoid NIFPGA: Resource not initialized
+	// errors? See https://www.chiefdelphi.com/forums/showpost.php?p=1640943&postcount=3
+	robot_.StartCompetition();
 	hal_thread_ = std::thread(&FRCRobotHWInterface::hal_keepalive_thread, this);
 
 	for (size_t i = 0; i < num_joints_; i++)
@@ -162,14 +165,8 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
   // ----------------------------------------------------
   // ----------------------------------------------------
   //
-  // FILL IN YOUR WRITE COMMAND TO USB/ETHERNET/ETHERCAT/SERIAL ETC HERE
-  //
-  // FOR A EASY SIMULATION EXAMPLE, OR FOR CODE TO CALCULATE
-  // VELOCITY FROM POSITION WITH SMOOTHING, SEE
-  // sim_hw_interface.cpp IN THIS PACKAGE
-  //
-	ROS_INFO_STREAM_THROTTLE(1, std::endl << std::string(__FILE__) << ":" << __LINE__ << 
-			                    std::endl << printCommandHelper());
+//	ROS_INFO_STREAM_THROTTLE(1, std::endl << std::string(__FILE__) << ":" << __LINE__ << 
+//			                    std::endl << printCommandHelper());
 
   for (std::size_t joint_id = 0; joint_id < num_joints_; ++joint_id)
   {
