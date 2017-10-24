@@ -65,9 +65,7 @@ void FRCRobotHWInterface::hal_keepalive_thread(void) {
 	run_hal_thread_ = true;
 	Joystick joystick(0);
 	while (run_hal_thread_) {
-	ROS_INFO_NAMED("frcrobot_hw_interface thread", "Starting 1 iteraion");
 		robot_.OneIteration();
-	ROS_INFO_NAMED("frcrobot_hw_interface thread", "Ending 1 iteraion");
 		// Things to keep track of
 		//    Alliance Station Id
 		//    Robot / match mode (auto, teleop, test, disabled)
@@ -170,15 +168,26 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 
   for (std::size_t joint_id = 0; joint_id < num_joints_; ++joint_id)
   {
-	  //
-	  // Worry about switching modes - set here if request is
-	  // different from currently programmed mode?
-	  //
+	  // Set talon control mode if it has changed 
+	  // but only if it has changed since the last
+	  // pass through write()
+	  hardware_interface::TalonMode mode;
+	  if (talon_command_[joint_id].newMode(mode))
+	  {
+		can_talons_[joint_id]->Set(0.0); // Make sure motor is stopped 
+		int rc = can_talons_[joint_id]->SetModeSelect(int (mode));
+		if (rc != CTR_OKAY)
+			ROS_WARN("*** setModeSelect() failed with %d", rc);
+	  }
+
+	  // TODO : check that mode has been initialized, if not
+	  // skip over writing command since the higher
+	  // level code hasn't requested we do anything with
+	  // the motor yet?
 
 	  // Read current commanded setpoint and write it
 	  // to the actual robot HW
 	  can_talons_[joint_id]->Set(talon_command_[joint_id].get());
-	  //can_talons_[joint_id]->Set(joint_velocity_command_[joint_id]);
   }
   // END DUMMY CODE
   //
