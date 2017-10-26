@@ -58,6 +58,6 @@ joint2_talon_controller:
     type: talon_controllers/TalonPositionCloseLoopController
     joint: joint_2
     close_loop_values:
-        - {p: 100 i: 1 d: 10 f: 0.5 izone: 2}
-        - {p: 1000 i: 15 d: 5 f: 1.5 izone: 3}
+        - {p: 100, i: 1, d: 10, f: 0.5, izone: 2}
+        - {p: 1000, i: 15, d: 5, f: 1.5, izone: 3}
 

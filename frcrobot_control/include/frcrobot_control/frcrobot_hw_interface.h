@@ -59,7 +59,7 @@ public:
 	void OneIteration(void)
 	{
 		// wait for driver station data so the loop doesn't hog the CPU
-		DriverStation::GetInstance().WaitForData();
+		//DriverStation::GetInstance().WaitForData();
 		ROS_INFO_STREAM_THROTTLE(1, std::endl << "Returned from DS WaitForData()");
 		//LoopFunc(); -- added for 2018, code from that copied below
 		//               to work with 2017 WPIlib stuff
