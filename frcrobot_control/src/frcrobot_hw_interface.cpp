@@ -108,13 +108,13 @@ void FRCRobotHWInterface::init(void)
 
 		// Need config information for each talon
 		// Should probably be part of YAML params for controller
-		// set initial mode
-		// set PIDF constants for both slots (read from nh params)
-		// set close loop ramp rate
+		// set initial mode - no, depend on controller
+		// set PIDF constants for both slots (read from nh params) - no, set from controller if needed
+		// set close loop ramp rate - same as above
 		// set voltage compensation rate
-		// set soft limits - forward/reverse limits and enables
-		// set limit switch config - enable, NO/NC
-		// set encoder config / reverse
+		// set soft limits - forward/reverse limits and enables - yes
+		// set limit switch config - enable, NO/NC  - probably yes
+		// set encoder config / reverse  - yes
 
 		can_talons_[i]->Set(0.0); // Make sure motor is stopped
 		// TODO : Grab initial mode from config file?

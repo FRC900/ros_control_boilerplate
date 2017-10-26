@@ -30,7 +30,7 @@ if (DEFINED CMAKE_TOOLCHAIN_FILE)
 	)
 
     # Switch between 2017 and 2018 beta wpilib code
-    if (0)
+    if (1)
 	  include_directories(
 	    $ENV{HOME}/wpilib_2017/user/cpp/include
 	    $ENV{HOME}/wpilib_2017/cpp/current/include

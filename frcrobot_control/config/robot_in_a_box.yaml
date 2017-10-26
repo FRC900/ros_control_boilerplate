@@ -49,12 +49,15 @@ joint_state_controller:
 # above.  
 # The type is a talon_controllers/TalonController
 joint1_talon_controller:
-    type: talon_controllers/TalonController
+    type: talon_controllers/TalonPercentVbusController
     joint: joint_1
 
 # Do the same for a second joint. The name is different
 # but the type is the same as the previous controller
 joint2_talon_controller:
-    type: talon_controllers/TalonController
+    type: talon_controllers/TalonPositionCloseLoopController
     joint: joint_2
+    close_loop_values:
+        - {p: 100 i: 1 d: 10 f: 0.5 izone: 2}
+        - {p: 1000 i: 15 d: 5 f: 1.5 izone: 3}
 

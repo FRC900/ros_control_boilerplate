@@ -39,9 +39,6 @@
 #include <ros_control_boilerplate/frc_robot_interface.h>
 #include <limits>
 
-// ROS parameter loading
-#include <rosparam_shortcuts/rosparam_shortcuts.h>
-
 namespace ros_control_boilerplate
 {
 FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_model)
@@ -63,8 +60,6 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
   // specifies a name for the joint and a hardware ID corresponding
   // to that value.  Joint types and locations are specified (by name)
   // in a URDF file loaded along with the controller.
-  //std::size_t error = 0;
-  //error += !rosparam_shortcuts::get(name_, rpnh, "joints", joint_names_);
   XmlRpc::XmlRpcValue joint_param_list;
   if (!rpnh.getParam("joints", joint_param_list))
 	  throw std::runtime_error("No joints were specified.");
@@ -90,8 +85,6 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 	  joint_hw_ids_.push_back(joint_hw_id_str);
 	  // Eventually add a list of valid modes for this joint?
   }
-  
-  //rosparam_shortcuts::shutdownIfError(name_, error);
 }
 
 void FRCRobotInterface::init()
