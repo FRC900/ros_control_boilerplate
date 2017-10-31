@@ -107,7 +107,7 @@ void FRCRobotHWInterface::init(void)
 
 	for (size_t i = 0; i < num_joints_; i++)
 	{
-		can_talons_.push_back(std::make_shared<CanTalonSRX>(joint_hw_ids_[i] /*, CAN update rate*/ ));
+		can_talons_.push_back(std::make_shared<CTRE::MotorControl::SmartMotorController>(joint_hw_ids_[i] /*, CAN update rate*/ ));
 
 		// Need config information for each talon
 		// Should probably be part of YAML params for controller
@@ -120,14 +120,11 @@ void FRCRobotHWInterface::init(void)
 		// set encoder config / reverse  - yes
 
 		can_talons_[i]->Set(0.0); // Make sure motor is stopped
-		// TODO : Grab initial mode from config file?
+
 		// Or maybe set it to disabled and require the higher
 		// level controller to request a mode on init?
-		int rc = can_talons_[i]->SetModeSelect(CanTalonSRX::kMode_DutyCycle);
-		if (rc != CTR_OKAY)
-			ROS_WARN("*** setModeSelect() failed with %d", rc);
-		// Keep internal hw state in sync with cached hw state?
-		//talon_command_[i].SetMode(foo);
+		can_talons_[i]->SetControlMode(CTRE::MotorControl::ControlMode::kPercentVbus);
+
 	}
 	ROS_INFO_NAMED("frcrobot_hw_interface", "FRCRobotHWInterface Ready.");
 }
@@ -141,18 +138,9 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 	  //
 	  // TODO : convert to units which make sense
 	  // for rest of code?
-	  int pos;
-	  int vel;
-	  if ((can_talons_[joint_id]->GetEncPosition(pos) == CTR_OKAY) &&
-		  (can_talons_[joint_id]->GetEncVel(vel)      == CTR_OKAY ))
-	  {
-		  // Save these for now so joint_state_publisher works?
-		  // Check for a better way to do this
-		  //joint_position_[joint_id] = pos;
-		  //joint_velocity_[joint_id] = vel;
-		  talon_state_[joint_id].setPosition(pos);
-		  talon_state_[joint_id].setSpeed(vel);
-	  }
+	  talon_state_[joint_id].setPosition(can_talons_[joint_id]->GetPosition());
+	  talon_state_[joint_id].setSpeed(can_talons_[joint_id]->GetSpeed());
+	  talon_state_[joint_id].setOutputVoltage(can_talons_[joint_id]->GetOutputVoltage());
   }
 }
 
@@ -174,13 +162,13 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 	  // Set talon control mode if it has changed 
 	  // but only if it has changed since the last
 	  // pass through write()
-	  hardware_interface::TalonMode mode;
-	  if (talon_command_[joint_id].newMode(mode))
+	  hardware_interface::TalonMode in_mode;
+	  CTRE::MotorControl::ControlMode::SmartControlMode out_mode;
+	  if (talon_command_[joint_id].newMode(in_mode) &&
+		  convertControlMode(in_mode, out_mode))
 	  {
 		can_talons_[joint_id]->Set(0.0); // Make sure motor is stopped 
-		int rc = can_talons_[joint_id]->SetModeSelect(int (mode));
-		if (rc != CTR_OKAY)
-			ROS_WARN("*** setModeSelect() failed with %d", rc);
+		can_talons_[joint_id]->SetControlMode(out_mode);
 	  }
 
 	  // TODO : check that mode has been initialized, if not
@@ -231,6 +219,49 @@ void FRCRobotHWInterface::enforceLimits(ros::Duration &period)
   // ----------------------------------------------------
   // ----------------------------------------------------
   // ----------------------------------------------------
+}
+
+// Convert from internal version of hardware mode ID
+// to one to write to actual Talon hardware
+// Return true if conversion is OK, false if
+// an unknown mode is hit.
+bool FRCRobotHWInterface::convertControlMode(
+		const hardware_interface::TalonMode input_mode, 
+		CTRE::MotorControl::ControlMode::SmartControlMode &output_mode)
+{
+	switch (input_mode)
+	{
+		case hardware_interface::TalonMode_PercentVbus:
+			output_mode = CTRE::MotorControl::ControlMode::kPercentVbus;
+			break;
+		case hardware_interface::TalonMode_Position:      // CloseLoop
+			output_mode = CTRE::MotorControl::ControlMode::kPosition;
+			break;
+		case hardware_interface::TalonMode_Speed:         // CloseLoop
+			output_mode = CTRE::MotorControl::ControlMode::kSpeed;
+			break;
+		case hardware_interface::TalonMode_Current:       // CloseLoop
+			output_mode = CTRE::MotorControl::ControlMode::kCurrent;
+			break;
+		case hardware_interface::TalonMode_Voltage:
+			output_mode = CTRE::MotorControl::ControlMode::kVoltage;
+			break;
+		case hardware_interface::TalonMode_Follower:
+			output_mode = CTRE::MotorControl::ControlMode::kFollower;
+			break;
+		case hardware_interface::TalonMode_MotionProfile:
+			output_mode = CTRE::MotorControl::ControlMode::kMotionProfile;
+			break;
+		case hardware_interface::TalonMode_MotionMagic:
+			output_mode = CTRE::MotorControl::ControlMode::kMotionMagic;
+			break;
+		default:
+			output_mode = CTRE::MotorControl::ControlMode::kDisabled;
+			ROS_WARN("Unknown mode seen in HW interface");
+			return false;
+	}
+
+	return true;
 }
 
 }  // namespace

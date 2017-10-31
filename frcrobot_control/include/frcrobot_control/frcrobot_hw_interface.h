@@ -41,7 +41,9 @@
 
 #include <thread>
 #include <ros_control_boilerplate/frc_robot_interface.h>
-#include <ctrlib/CanTalonSRX.h>
+//#include <ctrlib/CanTalonSRX.h>
+//#include <ctre/phoenix/MotorControl/CAN/TalonSRX.h>
+#include <ctre/phoenix/MotorControl/SmartMotorController.h>
 #include <IterativeRobot.h>
 #include <DriverStation.h>
 #include <LiveWindow/LiveWindow.h>
@@ -142,7 +144,9 @@ protected:
   void hal_keepalive_thread(void);
 
 private:
-  std::vector<std::shared_ptr<CanTalonSRX>> can_talons_;
+  bool convertControlMode(const hardware_interface::TalonMode input_mode,
+						  CTRE::MotorControl::ControlMode::SmartControlMode &output_mode);
+  std::vector<std::shared_ptr<CTRE::MotorControl::SmartMotorController>> can_talons_;
 
   double match_time_;
 
