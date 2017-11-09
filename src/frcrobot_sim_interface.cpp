@@ -37,7 +37,7 @@ Desc:   Example ros_control hardware interface blank template for the FRCRobot
 For a more detailed simulation example, see sim_hw_interface.cpp
 */
 
-#include <frcrobot_control/frcrobot_sim_interface.h>
+#include <ros_control_boilerplate/frcrobot_sim_interface.h>
 
 namespace frcrobot_control
 {

@@ -37,7 +37,7 @@
 */
 
 #include <ros_control_boilerplate/generic_hw_control_loop.h>
-#include <frcrobot_control/frcrobot_sim_interface.h>
+#include <ros_control_boilerplate/frcrobot_sim_interface.h>
 
 int main(int argc, char** argv)
 {
