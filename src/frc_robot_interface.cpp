@@ -92,7 +92,6 @@ void FRCRobotInterface::init()
 	num_joints_ = joint_names_.size();
 	// Create vectors of the correct size for
 	// talon HW state and commands
-	talon_state_.resize(num_joints_);
 	talon_command_.resize(num_joints_);
 
 	// Loop through the list of joint names
@@ -108,11 +107,12 @@ void FRCRobotInterface::init()
 		ROS_INFO_STREAM_NAMED(name_, "FRCRobotHWInterface: Loading joint name: " << joint_names_[i] << " at hw ID " << joint_hw_ids_[i]);
 
 		// Create joint state interface
-		// Register as JointStateInterface so that legacy
+		// Also register as JointStateInterface so that legacy
 		// ROS code which uses that object type can 
 		// access basic state info from the talon
 		// Code which needs more specific status should
 		// get a TalonStateHandle instead.
+		talon_state_.push_back(hardware_interface::TalonHWState(joint_hw_ids_[i]));
 		hardware_interface::TalonStateHandle tsh(joint_names_[i], &talon_state_[i]);
 		joint_state_interface_.registerHandle(*(dynamic_cast<hardware_interface::JointStateHandle *>(&tsh)));
 		talon_state_interface_.registerHandle(tsh);
