@@ -61,10 +61,10 @@ public:
 	void OneIteration(void)
 	{
 		// wait for driver station data so the loop doesn't hog the CPU
-		//DriverStation::GetInstance().WaitForData();
+		DriverStation::GetInstance().WaitForData();
 		ROS_INFO_STREAM_THROTTLE(1, std::endl << "Returned from DS WaitForData()");
-		//LoopFunc(); -- added for 2018, code from that copied below
-		//               to work with 2017 WPIlib stuff
+		LoopFunc(); //-- added for 2018, code from that copied below
+#if 0
 		// Call the appropriate function depending upon the current robot mode
 		if (IsDisabled()) {
 			// call DisabledInit() if we are now just entering disabled mode from
@@ -109,11 +109,12 @@ public:
 			TestPeriodic();
 		}
 		RobotPeriodic();
+#endif
 	}
 private:
-  enum class Mode { kNone, kDisabled, kAutonomous, kTeleop, kTest };
+  //enum class Mode { kNone, kDisabled, kAutonomous, kTeleop, kTest };
 
-  Mode m_lastMode = Mode::kNone;
+  //Mode m_lastMode = Mode::kNone;
 
 };
 
