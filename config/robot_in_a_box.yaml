@@ -10,8 +10,10 @@ generic_hw_control_loop:
 # of several types of HW interface : CAN_id, PWM_id, DIO_id, AIO_id, etc.
 hardware_interface:
    joints:
-       - {name: joint_1, hw_id: 11}
-       - {name: joint_2, hw_id: 9}
+       - {name: joint_1, hw_id: 1}
+       - {name: joint_2, hw_id: 2}
+       - {name: joint_3, hw_id: 3}
+       - {name: joint_4, hw_id: 4}
 
    # Add more data for each joint here - intitial mode, encoder type
    #    PIDF settings, limit switch settings, etc
@@ -61,3 +63,10 @@ joint2_talon_controller:
         - {p: 100.0, i: 1, d: 10.0, f: 0.5, i_zone: 2.0}
         - {p: 1000.0, i: 15.0, d: 5.0, f: 1.5, i_zone: 3.0}
 
+joint3_talon_controller:
+    type: talon_controllers/TalonPercentVbusController
+    joint: joint_3
+
+joint4_talon_controller:
+    type: talon_controllers/TalonPercentVbusController
+    joint: joint_4

@@ -62,7 +62,6 @@ public:
 	{
 		// wait for driver station data so the loop doesn't hog the CPU
 		DriverStation::GetInstance().WaitForData();
-		ROS_INFO_STREAM_THROTTLE(1, std::endl << "Returned from DS WaitForData()");
 		LoopFunc(); //-- added for 2018, code from that copied below
 #if 0
 		// Call the appropriate function depending upon the current robot mode

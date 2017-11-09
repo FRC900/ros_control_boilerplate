@@ -80,16 +80,11 @@ void FRCRobotHWInterface::hal_keepalive_thread(void) {
 		joystick_state_[0].x = joystick.GetX();
 		joystick_state_[0].y = joystick.GetY();
 		joystick_state_[0].z = joystick.GetZ();
-		ROS_INFO_STREAM_THROTTLE(1, std::endl << "Joystick_state = " 
-				<< joystick_state_[0].x << " "
-				<< joystick_state_[0].y << " "
-				<< joystick_state_[0].z);
 
 		// Maybe e-stop, FMS attached, ds attached
 		// Could do most of these via dummy joint handles. Since
 		// they read-only, create bogus state handles for them
 		// pointing to member vars in the FRCRobotInterface / FRCRobotHWInterface
-		usleep(10000);
 	}
 }
 
