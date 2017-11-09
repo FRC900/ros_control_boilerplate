@@ -40,7 +40,7 @@
 #include <iostream>
 #include <thread>
 
-#include <frcrobot_control/frcrobot_hw_interface.h>
+#include <ros_control_boilerplate/frcrobot_hw_interface.h>
 #include "HAL/DriverStation.h"
 #include "HAL/HAL.h"
 #include "Joystick.h"

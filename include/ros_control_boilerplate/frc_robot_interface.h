@@ -45,7 +45,7 @@
 
 // ROS Controls
 #include <hardware_interface/robot_hw.h>
-#include <talon_interface/talon_interface.h>
+#include <talon_interface/talon_command_interface.h>
 #include <controller_manager/controller_manager.h>
 #include <joint_limits_interface/joint_limits.h>
 #include <joint_limits_interface/joint_limits_interface.h>
