@@ -113,12 +113,14 @@ void FRCRobotInterface::init()
 		// Code which needs more specific status should
 		// get a TalonStateHandle instead.
 		talon_state_.push_back(hardware_interface::TalonHWState(joint_hw_ids_[i]));
+	}
+	for (size_t i = 0; i < num_joints_; i++)
+	{
 		hardware_interface::TalonStateHandle tsh(joint_names_[i], &talon_state_[i]);
 		joint_state_interface_.registerHandle(*(dynamic_cast<hardware_interface::JointStateHandle *>(&tsh)));
 		talon_state_interface_.registerHandle(tsh);
 
 		// Add command interfaces to joints
-		// TODO: decide based on transmissions?
 		hardware_interface::TalonCommandHandle talon_command_handle(tsh, &talon_command_[i]);
 		talon_command_interface_.registerHandle(talon_command_handle);
 	}
