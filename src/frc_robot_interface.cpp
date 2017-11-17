@@ -136,60 +136,11 @@ void FRCRobotInterface::init()
 	registerInterface(&joint_state_interface_);
 	registerInterface(&talon_command_interface_);
 
-#if 0
-  // Status
-  joint_position_.resize(num_joints_, 0.0);
-  joint_velocity_.resize(num_joints_, 0.0);
-  joint_effort_.resize(num_joints_, 0.0);
-
-  // Command
-  joint_position_command_.resize(num_joints_, 0.0);
-  joint_velocity_command_.resize(num_joints_, 0.0);
-  joint_effort_command_.resize(num_joints_, 0.0);
-#endif
-
   // Limits
   joint_position_lower_limits_.resize(num_joints_, 0.0);
   joint_position_upper_limits_.resize(num_joints_, 0.0);
   joint_velocity_limits_.resize(num_joints_, 0.0);
   joint_effort_limits_.resize(num_joints_, 0.0);
-
-#if 0
-  // Initialize interfaces for each joint
-  for (std::size_t joint_id = 0; joint_id < num_joints_; ++joint_id)
-  {
-    ROS_DEBUG_STREAM_NAMED(name_, "Loading joint name: " << joint_names_[joint_id]);
-
-    // Create joint state interface
-    joint_state_interface_.registerHandle(hardware_interface::JointStateHandle(
-        joint_names_[joint_id], &joint_position_[joint_id], &joint_velocity_[joint_id], &joint_effort_[joint_id]));
-
-    // Add command interfaces to joints
-    // TODO: decide based on transmissions?
-    hardware_interface::JointHandle joint_handle_position = hardware_interface::JointHandle(
-        joint_state_interface_.getHandle(joint_names_[joint_id]), &joint_position_command_[joint_id]);
-    position_joint_interface_.registerHandle(joint_handle_position);
-
-    hardware_interface::JointHandle joint_handle_velocity = hardware_interface::JointHandle(
-        joint_state_interface_.getHandle(joint_names_[joint_id]), &joint_velocity_command_[joint_id]);
-    velocity_joint_interface_.registerHandle(joint_handle_velocity);
-
-    hardware_interface::JointHandle joint_handle_effort = hardware_interface::JointHandle(
-        joint_state_interface_.getHandle(joint_names_[joint_id]), &joint_effort_command_[joint_id]);
-#if 0 // KCJ : we don't have effort interface ability (yet)
-    effort_joint_interface_.registerHandle(joint_handle_effort);
-#endif
-
-    // Load the joint limits
-    registerJointLimits(joint_handle_position, joint_handle_velocity, joint_handle_effort, joint_id);
-  }  // end for each joint
-
-
-  registerInterface(&joint_state_interface_);     // From RobotHW base class.
-  registerInterface(&position_joint_interface_);  // From RobotHW base class.
-  registerInterface(&velocity_joint_interface_);  // From RobotHW base class.
-  registerInterface(&effort_joint_interface_);    // From RobotHW base class.
-#endif
 
   ROS_INFO_STREAM_NAMED(name_, "FRCRobotInterface Ready.");
 }
@@ -355,10 +306,12 @@ std::string FRCRobotInterface::printStateHelper()
   std::stringstream ss;
   std::cout.precision(15);
 
-  ss << "    position     velocity         effort  " << std::endl;
+  ss << "    CAN ID       position        velocity        effort" << std::endl;
   for (std::size_t i = 0; i < num_joints_; ++i)
   {
-    ss << "j" << i << ": " << std::fixed << talon_state_[i].getPosition() << "\t ";
+    ss << "j" << i << ":    " ;
+	ss << talon_state_[i].getCANID() << "\t ";
+	ss << std::fixed << talon_state_[i].getPosition() << "\t ";
     ss << std::fixed << talon_state_[i].getSpeed() << "\t ";
     ss << std::fixed << talon_state_[i].getOutputVoltage() << std::endl;
   }
