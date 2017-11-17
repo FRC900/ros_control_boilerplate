@@ -61,20 +61,6 @@ include_directories(
   ${Gflags_INCLUDE_DIRS}
 )
 
-# Control loop
-add_library(generic_hw_control_loop src/generic_hw_control_loop.cpp)
-target_link_libraries(generic_hw_control_loop
-  ${catkin_LIBRARIES}
-)
-
-# Generic Hardware Interface
-add_library(frc_robot_interface
-  src/frc_robot_interface.cpp
-)
-target_link_libraries(frc_robot_interface
-  ${catkin_LIBRARIES}
-)
-
 # Sim version of main control
 # executable.  For now this just prints debugging
 # info for testing code which doens't actually hit
@@ -83,10 +69,11 @@ target_link_libraries(frc_robot_interface
 add_executable(frcrobot_sim_main 
 	src/frcrobot_sim_main.cpp
 	src/frcrobot_sim_interface.cpp
+	src/frc_robot_interface.cpp
+	src/generic_hw_control_loop.cpp
 )
+
 target_link_libraries(frcrobot_sim_main
-	frc_robot_interface
-	generic_hw_control_loop
 	${catkin_LIBRARIES}
 )
 
@@ -100,6 +87,8 @@ if (DEFINED CMAKE_TOOLCHAIN_FILE)
 	add_executable(frcrobot_hw_main 
 		src/frcrobot_hw_main.cpp
 		src/frcrobot_hw_interface.cpp
+		src/frc_robot_interface.cpp
+		src/generic_hw_control_loop.cpp
 	)
 
     # Switch between 2017 and 2018 beta wpilib code
@@ -137,8 +126,6 @@ if (DEFINED CMAKE_TOOLCHAIN_FILE)
 	# for HAL, driver station, and so on
 	target_link_libraries(frcrobot_hw_main
 		${catkin_LIBRARIES}
-		frc_robot_interface
-		generic_hw_control_loop
 		${WPI_LIB_DIR}/libwpi.so
 		${WPI_LIB_DIR}/libFRC_NetworkCommunication.so.18.0.0
 		${CTRE_LIBS}
@@ -165,14 +152,11 @@ target_link_libraries(${PROJECT_NAME}_test_trajectory
 ## TOOLS ------------------------------------------------------
 
 # Tool for analyzing controller performance
-add_library(controller_to_csv src/tools/controller_to_csv.cpp)
-target_link_libraries(controller_to_csv
-  ${catkin_LIBRARIES}
-)
-add_executable(${PROJECT_NAME}_controller_to_csv_main src/tools/controller_to_csv_main.cpp)
+add_executable(${PROJECT_NAME}_controller_to_csv_main 
+	src/tools/controller_to_csv_main.cpp
+	src/tools/controller_to_csv.cpp)
 set_target_properties(${PROJECT_NAME}_controller_to_csv_main PROPERTIES OUTPUT_NAME controller_to_csv_main PREFIX "")
 target_link_libraries(${PROJECT_NAME}_controller_to_csv_main
-  controller_to_csv
   ${Gflags_LIBRARIES}
   ${catkin_LIBRARIES}
 )
@@ -182,10 +166,11 @@ add_library(csv_to_controller src/tools/csv_to_controller.cpp)
 target_link_libraries(csv_to_controller
   ${catkin_LIBRARIES}
 )
-add_executable(${PROJECT_NAME}_csv_to_controller_main src/tools/csv_to_controller_main.cpp)
+add_executable(${PROJECT_NAME}_csv_to_controller_main 
+	src/tools/csv_to_controller_main.cpp
+	src/tools/csv_to_controller.cpp)
 set_target_properties(${PROJECT_NAME}_csv_to_controller_main PROPERTIES OUTPUT_NAME csv_to_controller_main PREFIX "")
 target_link_libraries(${PROJECT_NAME}_csv_to_controller_main
-  csv_to_controller
   ${Gflags_LIBRARIES}
   ${catkin_LIBRARIES}
 )
@@ -198,25 +183,8 @@ target_link_libraries(${PROJECT_NAME}_keyboard_teleop
 )
 
 ## Install ------------------------------------------------------------
-
-# Install libraries
-install(TARGETS
-    generic_hw_control_loop
-    frc_robot_interface
-    controller_to_csv
-    csv_to_controller
-  LIBRARY DESTINATION
-    ${CATKIN_PACKAGE_LIB_DESTINATION}
-)
-
 install(TARGETS
   frcrobot_sim_main
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
-
-# Install executables
-install(TARGETS
     ${PROJECT_NAME}_test_trajectory
     ${PROJECT_NAME}_controller_to_csv_main
     ${PROJECT_NAME}_csv_to_controller_main
