@@ -54,11 +54,11 @@ FRCRobotSimInterface::FRCRobotSimInterface(ros::NodeHandle &nh,
 	// controller on the robot.  Use this pointer
 	// to initialize each Talon with various params
 	// set for that motor controller in config files.
-	for (size_t i = 0; i < joint_hw_ids_.size(); i++)
+	for (size_t i = 0; i < can_talon_srx_can_ids_.size(); i++)
 	{
 		ROS_INFO_STREAM_NAMED("frcrobot_sim_interface", 
-				"Loading joint " << joint_names_[i] << 
-				" as CAN id " << joint_hw_ids_[i]);
+				"Loading joint " << can_talon_srx_names_[i] << 
+				" as CAN id " << can_talon_srx_can_ids_[i]);
 
 		// Need config information for each talon
 		// Should probably be part of YAML params for controller
@@ -99,7 +99,7 @@ void FRCRobotSimInterface::write(ros::Duration &elapsed_time)
 			std::endl << std::string(__FILE__) << ":" << __LINE__ << 
 			std::endl << "Command" << std::endl << printCommandHelper());
 
-	for (std::size_t joint_id = 0; joint_id < num_joints_; ++joint_id)
+	for (std::size_t joint_id = 0; joint_id < num_talon_srxs_; ++joint_id)
 	{
 		// Assume instant acceleration for now
 		double speed = talon_command_[joint_id].get();

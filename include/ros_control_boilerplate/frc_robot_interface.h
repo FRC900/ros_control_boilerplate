@@ -159,9 +159,9 @@ protected:
   joint_limits_interface::EffortJointSoftLimitsInterface eff_jnt_soft_limits_;
 
   // Configuration
-  std::vector<std::string> joint_names_;
-  std::vector<int>         joint_hw_ids_;
-  std::size_t num_joints_;
+  std::vector<std::string> can_talon_srx_names_;
+  std::vector<int>         can_talon_srx_can_ids_;
+  std::size_t num_talon_srxs_;
   urdf::Model *urdf_model_;
 
   // Modes
