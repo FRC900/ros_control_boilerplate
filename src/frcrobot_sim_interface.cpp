@@ -111,6 +111,15 @@ void FRCRobotSimInterface::write(ros::Duration &elapsed_time)
 
 	for (std::size_t joint_id = 0; joint_id < num_can_talon_srxs_; ++joint_id)
 	{
+		// If commanded mode changes, copy it over
+		// to current state
+		hardware_interface::TalonMode new_mode;
+		if (talon_command_[joint_id].newMode(new_mode))
+			talon_state_[joint_id].setTalonMode(new_mode);
+		// Follower doesn't need to be updated - used the
+		// followed talon for state instead
+		if (talon_state_[joint_id].getTalonMode() == hardware_interface::TalonMode_Follower)
+			continue;
 		// Assume instant acceleration for now
 		const double speed = talon_command_[joint_id].get();
 		talon_state_[joint_id].setPosition(talon_state_[joint_id].getPosition() + speed * elapsed_time.toSec());

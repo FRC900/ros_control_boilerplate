@@ -14,6 +14,7 @@ hardware_interface:
        - {name: talon_2, type: can_talon_srx, can_id: 2}
        - {name: talon_3, type: can_talon_srx, can_id: 3}
        - {name: talon_4, type: can_talon_srx, can_id: 4}
+       - {name: talon_5, type: can_talon_srx, can_id: 5}
        - {name: nidec_brushless_1, type: nidec_brushless, pwm_channel: 1, dio_channel: 2}
 
    # Add more data for each joint here - intitial mode, encoder type
@@ -42,14 +43,14 @@ hardware_interface:
 # to figure out what to map e.g. effort to in the Talon world
 talon_state_controller:
    type:         talon_state_controller/TalonStateController
-   publish_rate: 50
+   publish_rate: 30
 
 # Similar to above, but this one prints non-Talon state
 # (stuff that fits into the more standard ROS position/
 # speed/effort paradigm)
 joint_state_controller:
    type:         joint_state_controller/JointStateController
-   publish_rate: 50
+   publish_rate: 30
 
 # Create a controller called talon1_controller
 #  That name is used by spawner in the launch file to 
@@ -78,6 +79,11 @@ talon3_controller:
 talon4_controller:
     type: talon_controllers/TalonPercentVbusController
     joint: talon_4
+
+talon5_controller:
+    type: talon_controllers/TalonFollowerController
+    joint: talon_5
+    follow_joint: talon_1
 
 nidec_brushless1_controller:
     type: velocity_controllers/JointVelocityController

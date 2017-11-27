@@ -168,6 +168,9 @@ void FRCRobotInterface::init()
 		talon_command_interface_.registerHandle(talon_command_handle);
 	}
 
+	// Set vectors to correct size to hold data
+	// for each of the brushless motors we're trying 
+	// to control
 	num_nidec_brushlesses_ = nidec_brushless_names_.size();
 	brushless_pos_.resize(num_nidec_brushlesses_);
 	brushless_vel_.resize(num_nidec_brushlesses_);
