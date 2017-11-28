@@ -176,7 +176,22 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 		can_talons_[joint_id]->Set(0.0); // Make sure motor is stopped 
 		can_talons_[joint_id]->SetControlMode(out_mode);
 	  }
-
+	  int slot;
+	  if(talon_command_[joint_id].slotChanged(slot))
+	  {
+		  can_talons_[joint_id]->SelectProfileSlot(slot);
+	  }
+	  
+	  double p;
+	  double i;
+	  double d;
+	  double f;
+	  double iz;
+	  if(talon_command_[joint_id].pidfChanged(p, i, d, f, iz))
+	  {
+		can_talons_[joint_id]->SetPID(p, i, d, f);
+		can_talons_[joint_id]->SetIzone(iz);
+	  }
 	  // TODO : check that mode has been initialized, if not
 	  // skip over writing command since the higher
 	  // level code hasn't requested we do anything with
