@@ -186,7 +186,7 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 	  double i;
 	  double d;
 	  double f;
-	  double iz;
+	  unsigned iz;
 	  if(talon_command_[joint_id].pidfChanged(p, i, d, f, iz))
 	  {
 		can_talons_[joint_id]->SetPID(p, i, d, f);
