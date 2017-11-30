@@ -139,6 +139,11 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 	  talon_state_[joint_id].setPosition(can_talons_[joint_id]->GetPosition());
 	  talon_state_[joint_id].setSpeed(can_talons_[joint_id]->GetSpeed());
 	  talon_state_[joint_id].setOutputVoltage(can_talons_[joint_id]->GetOutputVoltage());
+	  talon_state_[joint_id].setOutputCurrent(can_talons_[join_id]->GetOutputCurrent());
+	  talon_state_[joint_id].setBusVoltage(can_talons_[joint_id]->GetBusVoltage());
+	  talon_state_[joint_id].setClosedLoopError(can_talons_[joint_id]->GetClosedLoopError());
+	  talon_state_[joint_id].setFwdLimitSwitch(can_talons_[joint_id]->IsFwdLimitSwitchClosed());
+	  talon_state_[joint_id].setRevLimitSwitch(can_talons_[joint_id]->IsRevLimitSwitchClosed());
   }
   for (size_t i = 0; i < num_nidec_brushlesses_; i++)
   {
@@ -175,22 +180,30 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 	  {
 		can_talons_[joint_id]->Set(0.0); // Make sure motor is stopped 
 		can_talons_[joint_id]->SetControlMode(out_mode);
+		talon_state_[joint_id]->setTalonMode(in_mode);
 	  }
 	  int slot;
 	  if(talon_command_[joint_id].slotChanged(slot))
 	  {
 		  can_talons_[joint_id]->SelectProfileSlot(slot);
+		  talon_state_[joint_id]->setSlot(slot);
 	  }
 	  
 	  double p;
 	  double i;
 	  double d;
 	  double f;
-	  double iz;
+	  unsigned iz;
 	  if(talon_command_[joint_id].pidfChanged(p, i, d, f, iz))
 	  {
 		can_talons_[joint_id]->SetPID(p, i, d, f);
 		can_talons_[joint_id]->SetIzone(iz);
+
+		talon_state_[joint_id]->setPidfP(p, slot);
+		talon_state_[joint_id]->setPidfI(i, slot);
+		talon_state_[joint_id]->setPidfD(d, slot);
+		talon_state_[joint_id]->setPidfF(f, slot);
+		talon_state_[joint_id]->setPidfIzone(iz, slot);
 	  }
 	  // TODO : check that mode has been initialized, if not
 	  // skip over writing command since the higher
