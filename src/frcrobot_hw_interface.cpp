@@ -188,23 +188,30 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 		  can_talons_[joint_id]->SelectProfileSlot(slot);
 		  talon_state_[joint_id]->setSlot(slot);
 	  }
-	  
+	  int lastSlot = -1;
+
 	  double p;
 	  double i;
 	  double d;
 	  double f;
 	  unsigned iz;
-	  if(talon_command_[joint_id].pidfChanged(p, i, d, f, iz))
-	  {
-		can_talons_[joint_id]->SetPID(p, i, d, f);
-		can_talons_[joint_id]->SetIzone(iz);
-
-		talon_state_[joint_id]->setPidfP(p, slot);
-		talon_state_[joint_id]->setPidfI(i, slot);
-		talon_state_[joint_id]->setPidfD(d, slot);
-		talon_state_[joint_id]->setPidfF(f, slot);
-		talon_state_[joint_id]->setPidfIzone(iz, slot);
+	  for (int j = 0; j < 2; j++) {
+		  if(talon_command_[joint_id].pidfChanged(p, i, d, f, iz, j))
+		  {
+			can_talons_[joint_id]->SelectProfileSlot(j);
+			lastSlot = j;
+			can_talons_[joint_id]->SetPID(p, i, d, f);
+			can_talons_[joint_id]->SetIzone(iz);
+	
+			talon_state_[joint_id]->setPidfP(p, slot);
+			talon_state_[joint_id]->setPidfI(i, slot);
+			talon_state_[joint_id]->setPidfD(d, slot);
+			talon_state_[joint_id]->setPidfF(f, slot);
+			talon_state_[joint_id]->setPidfIzone(iz, slot);
+	  	}
 	  }
+	  if (slot != lastSlot) can_talons_[joint_id]->SelectProfileSlot(slot);	  
+
 	  // TODO : check that mode has been initialized, if not
 	  // skip over writing command since the higher
 	  // level code hasn't requested we do anything with
