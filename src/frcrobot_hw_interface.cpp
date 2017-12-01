@@ -114,11 +114,8 @@ void FRCRobotHWInterface::init(void)
 		// set limit switch config - enable, NO/NC  - probably yes
 		// set encoder config / reverse  - yes
 
-		can_talons_[i]->Set(0.0); // Make sure motor is stopped
-
-		// Or maybe set it to disabled and require the higher
-		// level controller to request a mode on init?
-		can_talons_[i]->SetControlMode(CTRE::MotorControl::ControlMode::kPercentVbus);
+		can_talons_[i]->Disable(); // Make sure motor is stopped
+		can_talon_enabled_.push_back(false);
 	}
 	for (size_t i = 0; i < num_nidec_brushlesses_; i++)
 	{
@@ -139,7 +136,7 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 	  talon_state_[joint_id].setPosition(can_talons_[joint_id]->GetPosition());
 	  talon_state_[joint_id].setSpeed(can_talons_[joint_id]->GetSpeed());
 	  talon_state_[joint_id].setOutputVoltage(can_talons_[joint_id]->GetOutputVoltage());
-	  talon_state_[joint_id].setOutputCurrent(can_talons_[join_id]->GetOutputCurrent());
+	  talon_state_[joint_id].setOutputCurrent(can_talons_[joint_id]->GetOutputCurrent());
 	  talon_state_[joint_id].setBusVoltage(can_talons_[joint_id]->GetBusVoltage());
 	  talon_state_[joint_id].setClosedLoopError(can_talons_[joint_id]->GetClosedLoopError());
 	  talon_state_[joint_id].setFwdLimitSwitch(can_talons_[joint_id]->IsFwdLimitSwitchClosed());
@@ -178,15 +175,21 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 	  if (talon_command_[joint_id].newMode(in_mode) &&
 		  convertControlMode(in_mode, out_mode))
 	  {
-		can_talons_[joint_id]->Set(0.0); // Make sure motor is stopped 
 		can_talons_[joint_id]->SetControlMode(out_mode);
-		talon_state_[joint_id]->setTalonMode(in_mode);
+		// Enable motor first time mode is set
+		// and leave it enabled after that
+		if (can_talon_enabled_[joint_id] == false)
+		{
+			can_talons_[joint_id]->Enable();
+			can_talon_enabled_[joint_id] = true;
+		}
+		talon_state_[joint_id].setTalonMode(in_mode);
 	  }
 	  int slot;
 	  if(talon_command_[joint_id].slotChanged(slot))
 	  {
 		  can_talons_[joint_id]->SelectProfileSlot(slot);
-		  talon_state_[joint_id]->setSlot(slot);
+		  talon_state_[joint_id].setSlot(slot);
 	  }
 	  int lastSlot = -1;
 
@@ -203,11 +206,11 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 			can_talons_[joint_id]->SetPID(p, i, d, f);
 			can_talons_[joint_id]->SetIzone(iz);
 	
-			talon_state_[joint_id]->setPidfP(p, slot);
-			talon_state_[joint_id]->setPidfI(i, slot);
-			talon_state_[joint_id]->setPidfD(d, slot);
-			talon_state_[joint_id]->setPidfF(f, slot);
-			talon_state_[joint_id]->setPidfIzone(iz, slot);
+			talon_state_[joint_id].setPidfP(p, slot);
+			talon_state_[joint_id].setPidfI(i, slot);
+			talon_state_[joint_id].setPidfD(d, slot);
+			talon_state_[joint_id].setPidfF(f, slot);
+			talon_state_[joint_id].setPidfIzone(iz, slot);
 	  	}
 	  }
 	  if (slot != lastSlot) can_talons_[joint_id]->SelectProfileSlot(slot);	  

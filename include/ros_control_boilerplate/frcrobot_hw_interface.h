@@ -146,6 +146,7 @@ private:
   bool convertControlMode(const hardware_interface::TalonMode input_mode,
 						  CTRE::MotorControl::ControlMode::SmartControlMode &output_mode);
   std::vector<std::shared_ptr<CTRE::MotorControl::SmartMotorController>> can_talons_;
+  std::vector<bool> can_talon_enabled_;
   std::vector<std::shared_ptr<frc::NidecBrushless>> nidec_brushlesses_;
 
   std::thread hal_thread_;
