@@ -1,7 +1,7 @@
 # ros_control_boilerplate Settings -----------------------
 # Settings for ros_control control loop
 generic_hw_control_loop:
-  loop_hz: 30
+  loop_hz: 20
   cycle_time_error_threshold: 0.01
 
 # Settings for ros_control hardware interface
@@ -15,7 +15,7 @@ hardware_interface:
        - {name: talon_3, type: can_talon_srx, can_id: 3}
        - {name: talon_4, type: can_talon_srx, can_id: 4}
        - {name: talon_5, type: can_talon_srx, can_id: 5}
-       - {name: nidec_brushless_1, type: nidec_brushless, pwm_channel: 1, dio_channel: 2}
+       - {name: nidec_brushless_1, type: nidec_brushless, pwm_channel: 1, dio_channel: 1}
 
    # Add more data for each joint here - intitial mode, encoder type
    #    PIDF settings, limit switch settings, etc
@@ -69,8 +69,8 @@ talon2_controller:
     type: talon_controllers/TalonPositionCloseLoopController
     joint: talon_2
     close_loop_values:
-        - {p: 100.0, i: 1, d: 10.0, f: 0.5, i_zone: 2.0}
-        - {p: 1000.0, i: 15.0, d: 5.0, f: 1.5, i_zone: 3.0}
+        - {p: 100.0, i: 1, d: 10.0, f: 0.5, i_zone: 2}
+        - {p: 1000.0, i: 15.0, d: 5.0, f: 1.5, i_zone: 3}
 
 talon3_controller:
     type: talon_controllers/TalonPercentVbusController
