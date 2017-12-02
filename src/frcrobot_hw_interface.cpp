@@ -175,11 +175,13 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 	  if (talon_command_[joint_id].newMode(in_mode) &&
 		  convertControlMode(in_mode, out_mode))
 	  {
+		  ROS_INFO_STREAM("Setting joint " << joint_id << " mode to " << (int)out_mode << std::endl);
 		can_talons_[joint_id]->SetControlMode(out_mode);
 		// Enable motor first time mode is set
 		// and leave it enabled after that
 		if (can_talon_enabled_[joint_id] == false)
 		{
+			ROS_INFO_STREAM("Enabling joint " << joint_id << std::endl);
 			can_talons_[joint_id]->Enable();
 			can_talon_enabled_[joint_id] = true;
 		}
@@ -215,6 +217,16 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 	  }
 	  if (slot != lastSlot) can_talons_[joint_id]->SelectProfileSlot(slot);	  
 
+	  bool invert;
+	  bool invert_sensor_direction;
+	  if(talon_command_[joint_id].invertChanged(invert, invert_sensor_direction))
+	  {
+		  can_talons_[joint_id]->SetInverted(invert);
+		  can_talons_[joint_id]->SetSensorDirection(invert_sensor_direction);
+		  talon_state_[joint_id].setInvert(invert);
+		  talon_state_[joint_id].setInvertSensorDirection(invert_sensor_direction);
+	  }
+
 	  // TODO : check that mode has been initialized, if not
 	  // skip over writing command since the higher
 	  // level code hasn't requested we do anything with
@@ -223,6 +235,7 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 	  // Read current commanded setpoint and write it
 	  // to the actual robot HW
 	  can_talons_[joint_id]->Set(talon_command_[joint_id].get());
+	  talon_state_[joint_id].setSetpoint(talon_command_[joint_id].get());
   }
   for (size_t i = 0; i < num_nidec_brushlesses_; i++)
   {
