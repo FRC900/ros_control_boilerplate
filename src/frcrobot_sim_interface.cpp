@@ -116,10 +116,34 @@ void FRCRobotSimInterface::write(ros::Duration &elapsed_time)
 		hardware_interface::TalonMode new_mode;
 		if (talon_command_[joint_id].newMode(new_mode))
 			talon_state_[joint_id].setTalonMode(new_mode);
+		int slot;
+		if(talon_command_[joint_id].slotChanged(slot))
+		{
+			ROS_INFO_STREAM("Updated joint " << joint_id << " PIDF slot to " << slot << std::endl);
+			talon_state_[joint_id].setSlot(slot);
+		}
+
+		double p;
+		double i;
+		double d;
+		double f;
+		unsigned iz;
+		for (int j = 0; j < 2; j++) {
+			if(talon_command_[joint_id].pidfChanged(p, i, d, f, iz, j))
+			{
+				ROS_INFO_STREAM("Updated joint " << joint_id << " PIDF slot " << j << " config values" << std::endl);
+				talon_state_[joint_id].setPidfP(p, j);
+				talon_state_[joint_id].setPidfI(i, j);
+				talon_state_[joint_id].setPidfD(d, j);
+				talon_state_[joint_id].setPidfF(f, j);
+				talon_state_[joint_id].setPidfIzone(iz, j);
+			}
+		}
 		// Follower doesn't need to be updated - used the
 		// followed talon for state instead
 		if (talon_state_[joint_id].getTalonMode() == hardware_interface::TalonMode_Follower)
 			continue;
+		
 		// Assume instant acceleration for now
 		const double speed = talon_command_[joint_id].get();
 		talon_state_[joint_id].setPosition(talon_state_[joint_id].getPosition() + speed * elapsed_time.toSec());
