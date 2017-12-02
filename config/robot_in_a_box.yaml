@@ -39,8 +39,8 @@ hardware_interface:
 # encoder state used by the hw manager and publishes it as
 # a ROS topic.  This is generic ROS stuff, so we'll have
 # to figure out what to map e.g. effort to in the Talon world
-joint_state_controller:
-   type:         joint_state_controller/JointStateController
+talon_state_controller:
+   type:         talon_state_controller/TalonStateController
    publish_rate: 50
 
 # Create a controller called joint1_velocity_controller
