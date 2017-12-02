@@ -100,9 +100,9 @@ void FRCRobotHWInterface::init(void)
 	robot_.StartCompetition();
 	hal_thread_ = std::thread(&FRCRobotHWInterface::hal_keepalive_thread, this);
 
-	for (size_t i = 0; i < num_joints_; i++)
+	for (size_t i = 0; i < num_can_talon_srxs_; i++)
 	{
-		can_talons_.push_back(std::make_shared<CTRE::MotorControl::SmartMotorController>(joint_hw_ids_[i] /*, CAN update rate*/ ));
+		can_talons_.push_back(std::make_shared<CTRE::MotorControl::SmartMotorController>(can_talon_srx_can_ids_[i] /*, CAN update rate*/ ));
 
 		// Need config information for each talon
 		// Should probably be part of YAML params for controller
@@ -114,19 +114,19 @@ void FRCRobotHWInterface::init(void)
 		// set limit switch config - enable, NO/NC  - probably yes
 		// set encoder config / reverse  - yes
 
-		can_talons_[i]->Set(0.0); // Make sure motor is stopped
-
-		// Or maybe set it to disabled and require the higher
-		// level controller to request a mode on init?
-		can_talons_[i]->SetControlMode(CTRE::MotorControl::ControlMode::kPercentVbus);
-
+		can_talons_[i]->Disable(); // Make sure motor is stopped
+		can_talon_enabled_.push_back(false);
+	}
+	for (size_t i = 0; i < num_nidec_brushlesses_; i++)
+	{
+		nidec_brushlesses_.push_back(std::make_shared<frc::NidecBrushless>(nidec_brushless_pwm_channels_[i], nidec_brushless_dio_channels_[i]));
 	}
 	ROS_INFO_NAMED("frcrobot_hw_interface", "FRCRobotHWInterface Ready.");
 }
 
 void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 {
-  for (std::size_t joint_id = 0; joint_id < num_joints_; ++joint_id)
+  for (std::size_t joint_id = 0; joint_id < num_can_talon_srxs_; ++joint_id)
   {
 	  // read position and velocity from can_talons_[joint_id]
 	  // convert to whatever units make sense
@@ -136,6 +136,19 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 	  talon_state_[joint_id].setPosition(can_talons_[joint_id]->GetPosition());
 	  talon_state_[joint_id].setSpeed(can_talons_[joint_id]->GetSpeed());
 	  talon_state_[joint_id].setOutputVoltage(can_talons_[joint_id]->GetOutputVoltage());
+	  talon_state_[joint_id].setOutputCurrent(can_talons_[joint_id]->GetOutputCurrent());
+	  talon_state_[joint_id].setBusVoltage(can_talons_[joint_id]->GetBusVoltage());
+	  talon_state_[joint_id].setClosedLoopError(can_talons_[joint_id]->GetClosedLoopError());
+	  talon_state_[joint_id].setFwdLimitSwitch(can_talons_[joint_id]->IsFwdLimitSwitchClosed());
+	  talon_state_[joint_id].setRevLimitSwitch(can_talons_[joint_id]->IsRevLimitSwitchClosed());
+  }
+  for (size_t i = 0; i < num_nidec_brushlesses_; i++)
+  {
+	  // TODO : Figure out which of these the setpoint
+	  // actually is...
+	  brushless_pos_[i] = 
+	  brushless_vel_[i] = 
+	  brushless_eff_[i] = nidec_brushlesses_[i]->Get();
   }
 }
 
@@ -152,7 +165,7 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 //	ROS_INFO_STREAM_THROTTLE(1, std::endl << std::string(__FILE__) << ":" << __LINE__ << 
 //			                    std::endl << printCommandHelper());
 
-  for (std::size_t joint_id = 0; joint_id < num_joints_; ++joint_id)
+  for (std::size_t joint_id = 0; joint_id < num_can_talon_srxs_; ++joint_id)
   {
 	  // Set talon control mode if it has changed 
 	  // but only if it has changed since the last
@@ -162,9 +175,45 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 	  if (talon_command_[joint_id].newMode(in_mode) &&
 		  convertControlMode(in_mode, out_mode))
 	  {
-		can_talons_[joint_id]->Set(0.0); // Make sure motor is stopped 
 		can_talons_[joint_id]->SetControlMode(out_mode);
+		// Enable motor first time mode is set
+		// and leave it enabled after that
+		if (can_talon_enabled_[joint_id] == false)
+		{
+			can_talons_[joint_id]->Enable();
+			can_talon_enabled_[joint_id] = true;
+		}
+		talon_state_[joint_id].setTalonMode(in_mode);
 	  }
+	  int slot;
+	  if(talon_command_[joint_id].slotChanged(slot))
+	  {
+		  can_talons_[joint_id]->SelectProfileSlot(slot);
+		  talon_state_[joint_id].setSlot(slot);
+	  }
+	  int lastSlot = -1;
+
+	  double p;
+	  double i;
+	  double d;
+	  double f;
+	  unsigned iz;
+	  for (int j = 0; j < 2; j++) {
+		  if(talon_command_[joint_id].pidfChanged(p, i, d, f, iz, j))
+		  {
+			can_talons_[joint_id]->SelectProfileSlot(j);
+			lastSlot = j;
+			can_talons_[joint_id]->SetPID(p, i, d, f);
+			can_talons_[joint_id]->SetIzone(iz);
+	
+			talon_state_[joint_id].setPidfP(p, slot);
+			talon_state_[joint_id].setPidfI(i, slot);
+			talon_state_[joint_id].setPidfD(d, slot);
+			talon_state_[joint_id].setPidfF(f, slot);
+			talon_state_[joint_id].setPidfIzone(iz, slot);
+	  	}
+	  }
+	  if (slot != lastSlot) can_talons_[joint_id]->SelectProfileSlot(slot);	  
 
 	  // TODO : check that mode has been initialized, if not
 	  // skip over writing command since the higher
@@ -174,6 +223,10 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 	  // Read current commanded setpoint and write it
 	  // to the actual robot HW
 	  can_talons_[joint_id]->Set(talon_command_[joint_id].get());
+  }
+  for (size_t i = 0; i < num_nidec_brushlesses_; i++)
+  {
+	  nidec_brushlesses_[i]->Set(brushless_command_[i]);
   }
   // END DUMMY CODE
   //

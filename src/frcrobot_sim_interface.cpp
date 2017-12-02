@@ -54,11 +54,12 @@ FRCRobotSimInterface::FRCRobotSimInterface(ros::NodeHandle &nh,
 	// controller on the robot.  Use this pointer
 	// to initialize each Talon with various params
 	// set for that motor controller in config files.
-	for (size_t i = 0; i < joint_hw_ids_.size(); i++)
+	// TODO : assert can_talon_srx_names_.size() == can_talon_srx_can_ids_.size()
+	for (size_t i = 0; i < can_talon_srx_names_.size(); i++)
 	{
-		ROS_INFO_STREAM_NAMED("frcrobot_sim_interface", 
-				"Loading joint " << joint_names_[i] << 
-				" as CAN id " << joint_hw_ids_[i]);
+		ROS_INFO_STREAM_NAMED("frcrobot_sim_interface",
+				"Loading joint " << can_talon_srx_names_[i] <<
+				" as CAN id " << can_talon_srx_can_ids_[i]);
 
 		// Need config information for each talon
 		// Should probably be part of YAML params for controller
@@ -77,6 +78,15 @@ FRCRobotSimInterface::FRCRobotSimInterface(ros::NodeHandle &nh,
 		//int rc = can_talons_[i]->SetModeSelect(CanTalonSRX::kMode_DutyCycle);
 		//if (rc != CTR_OKAY)
 		//ROS_WARN("*** setModeSelect() failed with %d", rc);
+	}
+
+	// TODO : assert nidec_brushles_names_.size() == nidec_brushles_xxx_channels_.size()
+	for (size_t i = 0; i < nidec_brushless_names_.size(); i++)
+	{
+		ROS_INFO_STREAM_NAMED("frcrobot_sim_interface", 
+				"Loading joint " << nidec_brushless_names_[i] <<
+				" as PWM channel " << nidec_brushless_pwm_channels_[i] <<
+				" / DIO channel " << nidec_brushless_dio_channels_[i]);
 	}
 	ROS_INFO_NAMED("frcrobot_sim_interface", "FRCRobotSimInterface Ready.");
 }
@@ -99,12 +109,28 @@ void FRCRobotSimInterface::write(ros::Duration &elapsed_time)
 			std::endl << std::string(__FILE__) << ":" << __LINE__ << 
 			std::endl << "Command" << std::endl << printCommandHelper());
 
-	for (std::size_t joint_id = 0; joint_id < num_joints_; ++joint_id)
+	for (std::size_t joint_id = 0; joint_id < num_can_talon_srxs_; ++joint_id)
 	{
+		// If commanded mode changes, copy it over
+		// to current state
+		hardware_interface::TalonMode new_mode;
+		if (talon_command_[joint_id].newMode(new_mode))
+			talon_state_[joint_id].setTalonMode(new_mode);
+		// Follower doesn't need to be updated - used the
+		// followed talon for state instead
+		if (talon_state_[joint_id].getTalonMode() == hardware_interface::TalonMode_Follower)
+			continue;
 		// Assume instant acceleration for now
-		double speed = talon_command_[joint_id].get();
+		const double speed = talon_command_[joint_id].get();
 		talon_state_[joint_id].setPosition(talon_state_[joint_id].getPosition() + speed * elapsed_time.toSec());
 		talon_state_[joint_id].setSpeed(speed);
+	}
+	for (std::size_t joint_id = 0; joint_id < num_nidec_brushlesses_; ++joint_id)
+	{
+		// Assume instant acceleration for now
+		const double vel = brushless_command_[joint_id];
+		brushless_pos_[joint_id] += vel * elapsed_time.toSec();
+		brushless_vel_[joint_id] = vel;
 	}
 }
 

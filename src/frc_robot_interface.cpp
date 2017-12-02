@@ -71,28 +71,68 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 	  XmlRpc::XmlRpcValue& xml_joint_name = joint_params["name"];
 	  if (!xml_joint_name.valid() ||
 		   xml_joint_name.getType() != XmlRpc::XmlRpcValue::TypeString)
-		  throw std::runtime_error("An invalid joint name was specified.");
-	  const std::string joint_name_str = xml_joint_name;
-	  joint_names_.push_back(joint_name_str);
+		  throw std::runtime_error("An invalid joint name was specified (expecting a string)");
+	  const std::string joint_name = xml_joint_name;
 
-	  if (!joint_params.hasMember("hw_id"))
-		  throw std::runtime_error("A joint hw_id was not specified");
-	  XmlRpc::XmlRpcValue& xml_joint_hw_id = joint_params["hw_id"];
-	  if (!xml_joint_hw_id.valid() ||
-		   xml_joint_hw_id.getType() != XmlRpc::XmlRpcValue::TypeInt)
-		  throw std::runtime_error("An invalid joint hw_id was specified.");
-	  const int joint_hw_id_str = xml_joint_hw_id;
-	  joint_hw_ids_.push_back(joint_hw_id_str);
+	  if (!joint_params.hasMember("type"))
+		  throw std::runtime_error("A joint type was not specified");
+	  XmlRpc::XmlRpcValue& xml_joint_type = joint_params["type"];
+	  if (!xml_joint_type.valid() ||
+		   xml_joint_type.getType() != XmlRpc::XmlRpcValue::TypeString)
+		  throw std::runtime_error("An invalid joint type was specified (expecting a string).");
+	  const std::string joint_type = xml_joint_type;
+
+	  if (joint_type == "can_talon_srx")
+	  {
+		  if (!joint_params.hasMember("can_id"))
+			  throw std::runtime_error("A CAN Talon SRX can_id was not specified");
+		  XmlRpc::XmlRpcValue& xml_can_id = joint_params["can_id"];
+		  if (!xml_can_id.valid() ||
+				  xml_can_id.getType() != XmlRpc::XmlRpcValue::TypeInt)
+			  throw std::runtime_error("An invalid joint can_id was specified (expecting an int).");
+		  const int can_id = xml_can_id;
+
+		  can_talon_srx_names_.push_back(joint_name);
+		  can_talon_srx_can_ids_.push_back(can_id);
+	  }
+	  else if (joint_type == "nidec_brushless")
+	  {
+		  if (!joint_params.hasMember("pwm_channel"))
+			  throw std::runtime_error("A Nidec Brushless pwm_channel was not specified");
+		  XmlRpc::XmlRpcValue& xml_pwm_channel = joint_params["pwm_channel"];
+		  if (!xml_pwm_channel.valid() ||
+				  xml_pwm_channel.getType() != XmlRpc::XmlRpcValue::TypeInt)
+			  throw std::runtime_error("An invalid joint pwm_channel was specified (expecting an int).");
+		  const int pwm_channel = xml_pwm_channel;
+
+		  if (!joint_params.hasMember("dio_channel"))
+			  throw std::runtime_error("A Nidec Brushless dio_channel was not specified");
+		  XmlRpc::XmlRpcValue& xml_dio_channel = joint_params["dio_channel"];
+		  if (!xml_dio_channel.valid() ||
+				  xml_dio_channel.getType() != XmlRpc::XmlRpcValue::TypeInt)
+			  throw std::runtime_error("An invalid joint dio_channel was specified (expecting an int).");
+		  const int dio_channel = xml_dio_channel;
+
+		  nidec_brushless_names_.push_back(joint_name);
+		  nidec_brushless_pwm_channels_.push_back(pwm_channel);
+		  nidec_brushless_dio_channels_.push_back(dio_channel);
+	  }
+	  else
+	  {
+		  std::stringstream s;
+		  s << "Unknown joint type " << joint_type << " specified";
+		  throw std::runtime_error(s.str());
+	  }
 	  // Eventually add a list of valid modes for this joint?
   }
 }
 
 void FRCRobotInterface::init()
 {
-	num_joints_ = joint_names_.size();
+	num_can_talon_srxs_ = can_talon_srx_names_.size();
 	// Create vectors of the correct size for
 	// talon HW state and commands
-	talon_command_.resize(num_joints_);
+	talon_command_.resize(num_can_talon_srxs_);
 
 	// Loop through the list of joint names
 	// specified as params for the hardware_interface.
@@ -102,9 +142,9 @@ void FRCRobotInterface::init()
 	// controller on the robot.  Use this pointer
 	// to initialize each Talon with various params
 	// set for that motor controller in config files.
-	for (size_t i = 0; i < num_joints_; i++)
+	for (size_t i = 0; i < num_can_talon_srxs_; i++)
 	{
-		ROS_INFO_STREAM_NAMED(name_, "FRCRobotHWInterface: Loading joint name: " << joint_names_[i] << " at hw ID " << joint_hw_ids_[i]);
+		ROS_INFO_STREAM_NAMED(name_, "FRCRobotHWInterface: Registering Talon Interface for " << can_talon_srx_names_[i] << " at hw ID " << can_talon_srx_can_ids_[i]);
 
 		// Create joint state interface
 		// Also register as JointStateInterface so that legacy
@@ -112,22 +152,50 @@ void FRCRobotInterface::init()
 		// access basic state info from the talon
 		// Code which needs more specific status should
 		// get a TalonStateHandle instead.
-		talon_state_.push_back(hardware_interface::TalonHWState(joint_hw_ids_[i]));
+		talon_state_.push_back(hardware_interface::TalonHWState(can_talon_srx_can_ids_[i]));
 	}
-	for (size_t i = 0; i < num_joints_; i++)
+	for (size_t i = 0; i < num_can_talon_srxs_; i++)
 	{
-		hardware_interface::TalonStateHandle tsh(joint_names_[i], &talon_state_[i]);
-		joint_state_interface_.registerHandle(*(dynamic_cast<hardware_interface::JointStateHandle *>(&tsh)));
+		// Create state interface for the given Talon
+		// and point it to the data stored in the
+		// corresponding talon_state array entry
+		hardware_interface::TalonStateHandle tsh(can_talon_srx_names_[i], &talon_state_[i]);
 		talon_state_interface_.registerHandle(tsh);
 
-		// Add command interfaces to joints
+		// Do the same for a command interface for
+		// the same talon
 		hardware_interface::TalonCommandHandle talon_command_handle(tsh, &talon_command_[i]);
 		talon_command_interface_.registerHandle(talon_command_handle);
 	}
+
+	// Set vectors to correct size to hold data
+	// for each of the brushless motors we're trying 
+	// to control
+	num_nidec_brushlesses_ = nidec_brushless_names_.size();
+	brushless_pos_.resize(num_nidec_brushlesses_);
+	brushless_vel_.resize(num_nidec_brushlesses_);
+	brushless_eff_.resize(num_nidec_brushlesses_);
+	brushless_command_.resize(num_nidec_brushlesses_);
+	for (size_t i = 0; i < num_nidec_brushlesses_; i++)
+	{
+		ROS_INFO_STREAM_NAMED(name_, "FRCRobotHWInterface: Registering interface for : " << nidec_brushless_names_[i] << " at PWM channel " << nidec_brushless_pwm_channels_[i] << " / DIO channel " << nidec_brushless_dio_channels_[i]);
+		// Create state interface for the given brushless motor
+		// and point it to the data stored in the
+		// corresponding brushless_state array entry
+		hardware_interface::JointStateHandle jsh(nidec_brushless_names_[i], &brushless_pos_[i],&brushless_vel_[i],&brushless_eff_[i]);
+		joint_state_interface_.registerHandle(jsh);
+
+		// Do the same for a command interface for
+		// the same brushless motor
+		hardware_interface::JointHandle jh(jsh, &brushless_command_[i]);
+		joint_velocity_interface_.registerHandle(jh);
+	}
+
+	
 	// Publish various FRC-specific data using generic joint state for now
-	// For simple things this might be OK, but for more complex state 
+	// For simple things this might be OK, but for more complex state
 	// (e.g. joystick) it probably makes more sense to write a
-	// RealtimePublisher() for the data coming in from 
+	// RealtimePublisher() for the data coming in from
 	// the DS
 	joint_state_interface_.registerHandle(hardware_interface::JointStateHandle("MatchTime", &match_time_state_, &match_time_state_, &match_time_state_));
 	joystick_state_.resize(1);
@@ -135,12 +203,15 @@ void FRCRobotInterface::init()
 	registerInterface(&talon_state_interface_);
 	registerInterface(&joint_state_interface_);
 	registerInterface(&talon_command_interface_);
+	registerInterface(&joint_velocity_interface_);
 
+#if 0
   // Limits
-  joint_position_lower_limits_.resize(num_joints_, 0.0);
-  joint_position_upper_limits_.resize(num_joints_, 0.0);
-  joint_velocity_limits_.resize(num_joints_, 0.0);
-  joint_effort_limits_.resize(num_joints_, 0.0);
+  joint_position_lower_limits_.resize(num_can_talon_srxs_, 0.0);
+  joint_position_upper_limits_.resize(num_can_talon_srxs_, 0.0);
+  joint_velocity_limits_.resize(num_can_talon_srxs_, 0.0);
+  joint_effort_limits_.resize(num_can_talon_srxs_, 0.0);
+#endif
 
   ROS_INFO_STREAM_NAMED(name_, "FRCRobotInterface Ready.");
 }
@@ -170,12 +241,12 @@ void FRCRobotInterface::registerJointLimits(const hardware_interface::JointHandl
   }
 
   // Get limits from URDF
-  urdf::JointConstSharedPtr urdf_joint = urdf_model_->getJoint(joint_names_[joint_id]);
+  urdf::JointConstSharedPtr urdf_joint = urdf_model_->getJoint(can_talon_srx_names_[joint_id]);
 
   // Get main joint limits
   if (urdf_joint == NULL)
   {
-    ROS_ERROR_STREAM_NAMED(name_, "URDF joint not found " << joint_names_[joint_id]);
+    ROS_ERROR_STREAM_NAMED(name_, "URDF joint not found " << can_talon_srx_names_[joint_id]);
     return;
   }
 
@@ -183,31 +254,31 @@ void FRCRobotInterface::registerJointLimits(const hardware_interface::JointHandl
   if (joint_limits_interface::getJointLimits(urdf_joint, joint_limits))
   {
     has_joint_limits = true;
-    ROS_DEBUG_STREAM_NAMED(name_, "Joint " << joint_names_[joint_id] << " has URDF position limits ["
+    ROS_DEBUG_STREAM_NAMED(name_, "Joint " << can_talon_srx_names_[joint_id] << " has URDF position limits ["
                                                             << joint_limits.min_position << ", "
                                                             << joint_limits.max_position << "]");
     if (joint_limits.has_velocity_limits)
-      ROS_DEBUG_STREAM_NAMED(name_, "Joint " << joint_names_[joint_id] << " has URDF velocity limit ["
+      ROS_DEBUG_STREAM_NAMED(name_, "Joint " << can_talon_srx_names_[joint_id] << " has URDF velocity limit ["
                                                               << joint_limits.max_velocity << "]");
   }
   else
   {
     if (urdf_joint->type != urdf::Joint::CONTINUOUS)
-      ROS_WARN_STREAM_NAMED(name_, "Joint " << joint_names_[joint_id] << " does not have a URDF "
+      ROS_WARN_STREAM_NAMED(name_, "Joint " << can_talon_srx_names_[joint_id] << " does not have a URDF "
                             "position limit");
   }
 
   // Get limits from ROS param
   if (use_rosparam_joint_limits_)
   {
-    if (joint_limits_interface::getJointLimits(joint_names_[joint_id], nh_, joint_limits))
+    if (joint_limits_interface::getJointLimits(can_talon_srx_names_[joint_id], nh_, joint_limits))
     {
       has_joint_limits = true;
       ROS_DEBUG_STREAM_NAMED(name_,
-                             "Joint " << joint_names_[joint_id] << " has rosparam position limits ["
+                             "Joint " << can_talon_srx_names_[joint_id] << " has rosparam position limits ["
                                       << joint_limits.min_position << ", " << joint_limits.max_position << "]");
       if (joint_limits.has_velocity_limits)
-        ROS_DEBUG_STREAM_NAMED(name_, "Joint " << joint_names_[joint_id]
+        ROS_DEBUG_STREAM_NAMED(name_, "Joint " << can_talon_srx_names_[joint_id]
                                                                 << " has rosparam velocity limit ["
                                                                 << joint_limits.max_velocity << "]");
     }  // the else debug message provided internally by joint_limits_interface
@@ -219,11 +290,11 @@ void FRCRobotInterface::registerJointLimits(const hardware_interface::JointHandl
     if (joint_limits_interface::getSoftJointLimits(urdf_joint, soft_limits))
     {
       has_soft_limits = true;
-      ROS_DEBUG_STREAM_NAMED(name_, "Joint " << joint_names_[joint_id] << " has soft joint limits.");
+      ROS_DEBUG_STREAM_NAMED(name_, "Joint " << can_talon_srx_names_[joint_id] << " has soft joint limits.");
     }
     else
     {
-      ROS_DEBUG_STREAM_NAMED(name_, "Joint " << joint_names_[joint_id] << " does not have soft joint "
+      ROS_DEBUG_STREAM_NAMED(name_, "Joint " << can_talon_srx_names_[joint_id] << " does not have soft joint "
                              "limits");
     }
   }
@@ -307,7 +378,7 @@ std::string FRCRobotInterface::printStateHelper()
   std::cout.precision(15);
 
   ss << "    CAN ID       position        velocity        effort" << std::endl;
-  for (std::size_t i = 0; i < num_joints_; ++i)
+  for (std::size_t i = 0; i < num_can_talon_srxs_; ++i)
   {
     ss << "j" << i << ":    " ;
 	ss << talon_state_[i].getCANID() << "\t ";
@@ -323,7 +394,7 @@ std::string FRCRobotInterface::printCommandHelper()
   std::stringstream ss;
   std::cout.precision(15);
   ss << "    setpoint" << std::endl;
-  for (std::size_t i = 0; i < num_joints_; ++i)
+  for (std::size_t i = 0; i < num_can_talon_srxs_; ++i)
   {
     ss << "j" << i << ": " << std::fixed << talon_command_[i].get() << std::endl;
   }

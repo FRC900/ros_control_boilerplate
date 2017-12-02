@@ -146,6 +146,7 @@ protected:
   hardware_interface::JointStateInterface joint_state_interface_;
   hardware_interface::TalonStateInterface talon_state_interface_;
 
+  hardware_interface::VelocityJointInterface joint_velocity_interface_;
   hardware_interface::TalonCommandInterface talon_command_interface_;
 
   // Joint limits interfaces - Saturation
@@ -159,9 +160,15 @@ protected:
   joint_limits_interface::EffortJointSoftLimitsInterface eff_jnt_soft_limits_;
 
   // Configuration
-  std::vector<std::string> joint_names_;
-  std::vector<int>         joint_hw_ids_;
-  std::size_t num_joints_;
+  std::vector<std::string> can_talon_srx_names_;
+  std::vector<int>         can_talon_srx_can_ids_;
+  std::size_t              num_can_talon_srxs_;
+
+  std::vector<std::string> nidec_brushless_names_;
+  std::vector<int>         nidec_brushless_pwm_channels_;
+  std::vector<int>         nidec_brushless_dio_channels_;
+  std::size_t              num_nidec_brushlesses_;
+
   urdf::Model *urdf_model_;
 
   // Modes
@@ -173,10 +180,14 @@ protected:
   std::vector<hardware_interface::TalonHWState> talon_state_;
   double match_time_state_;
   std::vector<JoystickState> joystick_state_;
+  std::vector<double> brushless_pos_;
+  std::vector<double> brushless_vel_;
+  std::vector<double> brushless_eff_;
 
   // Same as above, but for pending commands to be
   // written to the hardware
   std::vector<hardware_interface::TalonHWCommand> talon_command_;
+  std::vector<double> brushless_command_;
 
   // Copy of limits, in case we need them later in our control stack
   std::vector<double> joint_position_lower_limits_;
