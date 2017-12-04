@@ -232,8 +232,12 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 
 	  // Read current commanded setpoint and write it
 	  // to the actual robot HW
-	  can_talons_[joint_id]->Set(talon_command_[joint_id].get());
-	  talon_state_[joint_id].setSetpoint(talon_command_[joint_id].get());
+	  double command;
+	  if (talon_command_[joint_id].get(command))
+	  {
+		  can_talons_[joint_id]->Set(command);
+		  talon_state_[joint_id].setSetpoint(command);
+	  }
   }
   for (size_t i = 0; i < num_nidec_brushlesses_; i++)
   {

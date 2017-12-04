@@ -145,7 +145,11 @@ void FRCRobotSimInterface::write(ros::Duration &elapsed_time)
 			continue;
 		
 		// Assume instant acceleration for now
-		const double speed = talon_command_[joint_id].get();
+		double speed;
+		if (talon_command_[joint_id].get(speed))
+		{
+			talon_state_[joint_id].setSetpoint(speed);
+		}
 		talon_state_[joint_id].setPosition(talon_state_[joint_id].getPosition() + speed * elapsed_time.toSec());
 		talon_state_[joint_id].setSpeed(speed);
 	}

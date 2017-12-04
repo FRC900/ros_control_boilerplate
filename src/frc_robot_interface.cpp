@@ -396,7 +396,9 @@ std::string FRCRobotInterface::printCommandHelper()
   ss << "    setpoint" << std::endl;
   for (std::size_t i = 0; i < num_can_talon_srxs_; ++i)
   {
-    ss << "j" << i << ": " << std::fixed << talon_command_[i].get() << std::endl;
+	double setpoint;
+   	talon_command_[i].get(setpoint);
+    ss << "j" << i << ": " << std::fixed << setpoint<< std::endl;
   }
   return ss.str();
 }
