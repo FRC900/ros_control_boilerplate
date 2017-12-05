@@ -48,6 +48,9 @@
 
 //TODO Make nativeU configurable
 int nativeU = 4096;   //native units of ctre magnetic encoders
+//RG: More than just making nativeU configurable, we should consider a much more automated system
+//i.e. set conversion factor based on specified feedback sensor
+//note that you can add a conversion factors that will automatically be applied for speed and position
 
 namespace frcrobot_control
 {
@@ -241,7 +244,9 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 	  {
           switch (out_mode) {
             case CTRE::MotorControl::ControlMode::kSpeed:
-                command = command/2/M_PI*nativeU*.1; //assumes input value is position for 100ms there is a chance it is supposed to be 10ms
+                command = command/2/M_PI*nativeU*.1; //assumes input value is velocity per 100ms there is a chance it is supposed to be 10ms
+		//RG: I am almost certain that it isn't 10 ms. However, if you configure some of the units
+		//using one of the talon functions,  the units are RPM and Rotations
                 break;
             case CTRE::MotorControl::ControlMode::kPosition:
                 command = command/2/M_PI*nativeU;
