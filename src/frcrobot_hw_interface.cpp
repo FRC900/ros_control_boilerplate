@@ -44,6 +44,10 @@
 #include "HAL/DriverStation.h"
 #include "HAL/HAL.h"
 #include "Joystick.h"
+#include "math.h"
+
+//TODO Make nativeU configurable
+int nativeU = 4096;   //native units of ctre magnetic encoders
 
 namespace frcrobot_control
 {
@@ -133,8 +137,8 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 	  //
 	  // TODO : convert to units which make sense
 	  // for rest of code?
-	  talon_state_[joint_id].setPosition(can_talons_[joint_id]->GetPosition());
-	  talon_state_[joint_id].setSpeed(can_talons_[joint_id]->GetSpeed());
+	  talon_state_[joint_id].setPosition(can_talons_[joint_id]->GetPosition()/4096*2*M_PI);
+	  talon_state_[joint_id].setSpeed(can_talons_[joint_id]->GetSpeed()/4096*2*M_PI/.1);
 	  talon_state_[joint_id].setOutputVoltage(can_talons_[joint_id]->GetOutputVoltage());
 	  talon_state_[joint_id].setOutputCurrent(can_talons_[joint_id]->GetOutputCurrent());
 	  talon_state_[joint_id].setBusVoltage(can_talons_[joint_id]->GetBusVoltage());
@@ -235,8 +239,17 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 	  double command;
 	  if (talon_command_[joint_id].get(command))
 	  {
+          switch (out_mode) {
+            case CTRE::MotorControl::ControlMode::kSpeed:
+                command = command/2/M_PI*nativeU*.1; //assumes input value is position for 100ms there is a chance it is supposed to be 10ms
+                break;
+            case CTRE::MotorControl::ControlMode::kPosition:
+                command = command/2/M_PI*nativeU;
+                break;
+          }
 		  can_talons_[joint_id]->Set(command);
 		  talon_state_[joint_id].setSetpoint(command);
+          
 	  }
   }
   for (size_t i = 0; i < num_nidec_brushlesses_; i++)
