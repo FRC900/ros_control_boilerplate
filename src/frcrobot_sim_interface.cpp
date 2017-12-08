@@ -139,6 +139,14 @@ void FRCRobotSimInterface::write(ros::Duration &elapsed_time)
 				talon_state_[joint_id].setPidfIzone(iz, j);
 			}
 		}
+		bool invert;
+		bool invert_sensor_direction;
+		if(talon_command_[joint_id].invertChanged(invert, invert_sensor_direction))
+		{
+			talon_state_[joint_id].setInvert(invert);
+			talon_state_[joint_id].setInvertSensorDirection(invert_sensor_direction);
+		}
+		
 		// Follower doesn't need to be updated - used the
 		// followed talon for state instead
 		if (talon_state_[joint_id].getTalonMode() == hardware_interface::TalonMode_Follower)
@@ -146,12 +154,15 @@ void FRCRobotSimInterface::write(ros::Duration &elapsed_time)
 		
 		// Assume instant acceleration for now
 		double speed;
-		if (talon_command_[joint_id].get(speed))
-		{
+
+		bool speed_changed = talon_command_[joint_id].get(speed);
+		if (invert)
+			speed = -speed;
+		if (speed_changed)
 			talon_state_[joint_id].setSetpoint(speed);
-		}
-		talon_state_[joint_id].setPosition(talon_state_[joint_id].getPosition() + speed * elapsed_time.toSec());
-		talon_state_[joint_id].setSpeed(speed);
+
+		talon_state_[joint_id].setPosition(talon_state_[joint_id].getPosition() + (invert_sensor_direction ? -1 : 1 ) * speed * elapsed_time.toSec());
+		talon_state_[joint_id].setSpeed((invert_sensor_direction ? -1 : 1 ) * speed);
 	}
 	for (std::size_t joint_id = 0; joint_id < num_nidec_brushlesses_; ++joint_id)
 	{
