@@ -7,14 +7,14 @@ generic_hw_control_loop:
 # Settings for ros_control hardware interface
 hardware_interface:
    joints:
-      - base_to_lf_angle
-      - lf_angle_to_speed
-      - base_to_rf_angle
-      - rf_angle_to_speed
-      - base_to_lr_angle
-      - lr_angle_to_speed
-      - base_to_rr_angle
-      - rr_angle_to_speed
+      - {name: base_to_lf_angle, type: can_talon_srx, can_id: 1}
+      - {name: lf_angle_to_speed, type: can_talon_srx, can_id: 1}
+      - {name: base_to_rf_angle, type: can_talon_srx, can_id: 1}
+      - {name: rf_angle_to_speed, type: can_talon_srx, can_id: 1}
+      - {name: base_to_lr_angle, type: can_talon_srx, can_id: 1}
+      - {name: lr_angle_to_speed, type: can_talon_srx, can_id: 1}
+      - {name: base_to_rr_angle, type: can_talon_srx, can_id: 1}
+      - {name: rr_angle_to_speed, type: can_talon_srx, can_id: 1}
    sim_control_mode: 1 # 0: position, 1: velocity
 
 # Publish all joint states ----------------------------------
@@ -34,7 +34,7 @@ swerve_base_controller:
     yaw_decelration_limit: 12
 
     wheels:
-        - {steering_joint: base_to_lf_angle, axle_joint: lf_angle_to_speed, diameter: 15.24}
-        - {steering_joint: base_to_rf_angle, axle_joint: rf_angle_to_speed, diameter: 15.24}
-        - {steering_joint: base_to_rr_angle, axle_joint: rr_angle_to_speed, diameter: 15.24}
-        - {steering_joint: base_to_lr_angle, axle_joint: lr_angle_to_speed, diameter: 15.24}
+        - {steering_joint: base_to_lf_angle, axle_joint: lf_angle_to_speed, diameter: .1524}
+        - {steering_joint: base_to_rf_angle, axle_joint: rf_angle_to_speed, diameter: .1524}
+        - {steering_joint: base_to_rr_angle, axle_joint: rr_angle_to_speed, diameter: .1524}
+        - {steering_joint: base_to_lr_angle, axle_joint: lr_angle_to_speed, diameter: .1524}
