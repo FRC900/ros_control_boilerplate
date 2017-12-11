@@ -199,7 +199,7 @@ void FRCRobotInterface::init()
 	// the DS
 	joint_state_interface_.registerHandle(hardware_interface::JointStateHandle("MatchTime", &match_time_state_, &match_time_state_, &match_time_state_));
 	joystick_state_.resize(1);
-	joint_state_interface_.registerHandle(hardware_interface::JointStateHandle("Joystick1", &joystick_state_[0].x, &joystick_state_[0].y, &joystick_state_[0].z));
+	joint_state_interface_.registerHandle(hardware_interface::JointStateHandle("Joystick1", &joystick_state_[0].leftStickX, &joystick_state_[0].leftStickY, &joystick_state_[0].rightStickX));
 	registerInterface(&talon_state_interface_);
 	registerInterface(&joint_state_interface_);
 	registerInterface(&talon_command_interface_);

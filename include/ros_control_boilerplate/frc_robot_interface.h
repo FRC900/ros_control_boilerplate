@@ -54,11 +54,36 @@
 
 namespace ros_control_boilerplate
 {
+struct ButtonState
+{
+	bool button;
+	bool press;
+	bool release;
+};
 struct JoystickState
 {
-	double x;
-	double y;
-	double z;
+	double leftStickX; //consider changing sticks to vectors
+	double leftStickY;
+	double rightStickX;
+	double rightStickY;
+	double leftTrigger;
+	double rightTrigger;
+	ButtonState buttonX;
+	ButtonState buttonY;
+	ButtonState buttonA;
+	ButtonState buttonB;
+	ButtonState bumperLeft;
+	ButtonState bumperRight;
+	ButtonState buttonBack;
+	ButtonState buttonStart;
+	ButtonState stickLeft;
+	ButtonState stickRight;
+	ButtonState dirLeft;
+	ButtonState dirUp;
+	ButtonState dirRight;
+	ButtonState dirDown;
+
+	//consider compiling all of button stuff to a single struct that is a sub-struct fo this struct
 	// Add buttons, triggers, bumpers, etc
 };
 
@@ -178,6 +203,7 @@ protected:
   // Array holding master cached state of hardware
   // resources
   std::vector<hardware_interface::TalonHWState> talon_state_;
+  //std::vector<hardware_interface::JoystickHWState> joydstick_state_;
   double match_time_state_;
   std::vector<JoystickState> joystick_state_;
   std::vector<double> brushless_pos_;
