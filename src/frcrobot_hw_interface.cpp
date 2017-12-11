@@ -109,7 +109,7 @@ void FRCRobotHWInterface::init(void)
 
 	for (size_t i = 0; i < num_can_talon_srxs_; i++)
 	{
-		can_talons_.push_back(std::make_shared<CTRE::MotorControl::SmartMotorController>(can_talon_srx_can_ids_[i] /*, CAN update rate*/ ));
+		can_talons_.push_back(std::make_shared<CTRE::MotorControl::CAN::TalonSRX>(can_talon_srx_can_ids_[i] /*, CAN update rate*/ ));
 
 		// Need config information for each talon
 		// Should probably be part of YAML params for controller
@@ -121,8 +121,7 @@ void FRCRobotHWInterface::init(void)
 		// set limit switch config - enable, NO/NC  - probably yes
 		// set encoder config / reverse  - yes
 
-		can_talons_[i]->Disable(); // Make sure motor is stopped
-		can_talon_enabled_.push_back(false);
+		can_talons_[i]->Set(ControlMode::Disabled, 0); // Make sure motor is stopped
 	}
 	for (size_t i = 0; i < num_nidec_brushlesses_; i++)
 	{
@@ -139,15 +138,33 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 	  // convert to whatever units make sense
 	  //
 	  // TODO : convert to units which make sense
-	  // for rest of code?
-	  talon_state_[joint_id].setPosition(can_talons_[joint_id]->GetPosition()/4096*2*M_PI);
-	  talon_state_[joint_id].setSpeed(can_talons_[joint_id]->GetSpeed()/4096*2*M_PI/.1);
-	  talon_state_[joint_id].setOutputVoltage(can_talons_[joint_id]->GetOutputVoltage());
-	  talon_state_[joint_id].setOutputCurrent(can_talons_[joint_id]->GetOutputCurrent());
-	  talon_state_[joint_id].setBusVoltage(can_talons_[joint_id]->GetBusVoltage());
-	  talon_state_[joint_id].setClosedLoopError(can_talons_[joint_id]->GetClosedLoopError());
-	  talon_state_[joint_id].setFwdLimitSwitch(can_talons_[joint_id]->IsFwdLimitSwitchClosed());
-	  talon_state_[joint_id].setRevLimitSwitch(can_talons_[joint_id]->IsRevLimitSwitchClosed());
+	  // for rest of code? Add a method which takes current
+	  // mode, encoder choice and maybe a user-configurable ticks/rotation
+	  // setting and converts from native units to radians (for position)
+	  // and radians/src (for velocity)
+	  talon_state_[joint_id].setPosition(can_talons_[joint_id]->GetSelectedSensorPosition()/4096*2*M_PI);
+	  talon_state_[joint_id].setSpeed(can_talons_[joint_id]->GetSelectedSensorVelocity()/4096*2*M_PI/.1);
+
+	  float bus_voltage;
+	  can_talons_[joint_id]->GetBusVoltage(bus_voltage);
+	  talon_state_[joint_id].setBusVoltage(bus_voltage);
+	  float motor_output_percent;
+	  can_talons_[joint_id]->GetMotorOutputPercent(motor_output_percent);
+	  talon_state_[joint_id].setMotorOutputPercent(motor_output_percent);
+	  float output_voltage;
+	  can_talons_[joint_id]->GetMotorOutputVoltage(output_voltage);
+	  talon_state_[joint_id].setOutputVoltage(output_voltage);
+	  float output_current;
+	  can_talons_[joint_id]->GetOutputCurrent(output_current);
+	  talon_state_[joint_id].setOutputCurrent(output_current);
+
+	  int closed_loop_error;
+	  can_talons_[joint_id]->GetClosedLoopError(closed_loop_error);
+	  talon_state_[joint_id].setClosedLoopError(closed_loop_error);
+
+	  // TODO :: Fix me
+	  //talon_state_[joint_id].setFwdLimitSwitch(can_talons_[joint_id]->IsFwdLimitSwitchClosed());
+	  //talon_state_[joint_id].setRevLimitSwitch(can_talons_[joint_id]->IsRevLimitSwitchClosed());
   }
   for (size_t i = 0; i < num_nidec_brushlesses_; i++)
   {
@@ -174,31 +191,12 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 
   for (std::size_t joint_id = 0; joint_id < num_can_talon_srxs_; ++joint_id)
   {
-	  // Set talon control mode if it has changed 
-	  // but only if it has changed since the last
-	  // pass through write()
-	  hardware_interface::TalonMode in_mode;
-	  CTRE::MotorControl::ControlMode::SmartControlMode out_mode;
-	  if (talon_command_[joint_id].newMode(in_mode) &&
-		  convertControlMode(in_mode, out_mode))
-	  {
-		can_talons_[joint_id]->SetControlMode(out_mode);
-		// Enable motor first time mode is set
-		// and leave it enabled after that
-		if (can_talon_enabled_[joint_id] == false)
-		{
-			can_talons_[joint_id]->Enable();
-			can_talon_enabled_[joint_id] = true;
-		}
-		talon_state_[joint_id].setTalonMode(in_mode);
-	  }
 	  int slot;
 	  if(talon_command_[joint_id].slotChanged(slot))
 	  {
 		  can_talons_[joint_id]->SelectProfileSlot(slot);
 		  talon_state_[joint_id].setSlot(slot);
 	  }
-	  int lastSlot = -1;
 
 	  double p;
 	  double i;
@@ -208,10 +206,14 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 	  for (int j = 0; j < 2; j++) {
 		  if(talon_command_[joint_id].pidfChanged(p, i, d, f, iz, j))
 		  {
-			can_talons_[joint_id]->SelectProfileSlot(j);
-			lastSlot = j;
-			can_talons_[joint_id]->SetPID(p, i, d, f);
-			can_talons_[joint_id]->SetIzone(iz);
+			can_talons_[joint_id]->Config_kP(j, p, 0);
+			can_talons_[joint_id]->Config_kI(j, i, 0);
+			can_talons_[joint_id]->Config_kD(j, d, 0);
+			can_talons_[joint_id]->Config_kF(j, f, 0);
+			can_talons_[joint_id]->Config_IntegralZone(j, iz, 0);
+			// TODO (plus corresponding talon_state_ below)
+			//   can_talons_[joint_id]->Config_AllowableClosedloopError(j, );
+			//   can_talons_[joint_id]->Config_IntegralAccumulator(j, );
 	
 			talon_state_[joint_id].setPidfP(p, j);
 			talon_state_[joint_id].setPidfI(i, j);
@@ -220,41 +222,40 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 			talon_state_[joint_id].setPidfIzone(iz, j);
 	  	}
 	  }
-	  if (slot != lastSlot) can_talons_[joint_id]->SelectProfileSlot(slot);	  
 
 	  bool invert;
-	  bool invert_sensor_direction;
-	  if(talon_command_[joint_id].invertChanged(invert, invert_sensor_direction))
+	  bool sensor_phase;
+	  if(talon_command_[joint_id].invertChanged(invert, sensor_phase))
 	  {
 		  can_talons_[joint_id]->SetInverted(invert);
-		  can_talons_[joint_id]->SetSensorDirection(invert_sensor_direction);
+		  can_talons_[joint_id]->SetSensorPhase(sensor_phase);
 		  talon_state_[joint_id].setInvert(invert);
-		  talon_state_[joint_id].setInvertSensorDirection(invert_sensor_direction);
+		  talon_state_[joint_id].setSensorPhase(sensor_phase);
 	  }
 
-	  // TODO : check that mode has been initialized, if not
-	  // skip over writing command since the higher
-	  // level code hasn't requested we do anything with
-	  // the motor yet?
 
-	  // Read current commanded setpoint and write it
-	  // to the actual robot HW
+	  // Set new motor setpoint if either the mode or
+	  // the setpoint has been changed 
 	  double command;
-	  if (talon_command_[joint_id].get(command))
+	  hardware_interface::TalonMode in_mode;
+	  ControlMode out_mode;
+	  if ((talon_command_[joint_id].newMode(in_mode) || 
+	       talon_command_[joint_id].get(command) ) &&
+	      convertControlMode(in_mode, out_mode))
 	  {
-          switch (out_mode) {
-            case CTRE::MotorControl::ControlMode::kSpeed:
-                command = command/2/M_PI*nativeU*.1; //assumes input value is velocity per 100ms there is a chance it is supposed to be 10ms
-		//RG: I am almost certain that it isn't 10 ms. However, if you configure some of the units
-		//using one of the talon functions,  the units are RPM and Rotations
-                break;
-            case CTRE::MotorControl::ControlMode::kPosition:
-                command = command/2/M_PI*nativeU;
-                break;
-          }
-		  can_talons_[joint_id]->Set(command);
+		  switch (out_mode) {
+			  case ControlMode::Velocity:
+				  command = command/2/M_PI*nativeU*.1; //assumes input value is velocity per 100ms there is a chance it is supposed to be 10ms
+				  //RG: I am almost certain that it isn't 10 ms. However, if you configure some of the units
+				  //using one of the talon functions,  the units are RPM and Rotations
+				  break;
+			  case ControlMode::Position:
+				  command = command/2/M_PI*nativeU;
+				  break;
+		  }
+		  can_talons_[joint_id]->Set(out_mode, command);
+		  talon_state_[joint_id].setTalonMode(in_mode);
 		  talon_state_[joint_id].setSetpoint(command);
-          
 	  }
   }
   for (size_t i = 0; i < num_nidec_brushlesses_; i++)
@@ -308,36 +309,39 @@ void FRCRobotHWInterface::enforceLimits(ros::Duration &period)
 // an unknown mode is hit.
 bool FRCRobotHWInterface::convertControlMode(
 		const hardware_interface::TalonMode input_mode, 
-		CTRE::MotorControl::ControlMode::SmartControlMode &output_mode)
+		ControlMode &output_mode)
 {
 	switch (input_mode)
 	{
-		case hardware_interface::TalonMode_PercentVbus:
-			output_mode = CTRE::MotorControl::ControlMode::kPercentVbus;
+		case hardware_interface::TalonMode_PercentOutput:
+			output_mode = ControlMode::PercentOutput;
 			break;
 		case hardware_interface::TalonMode_Position:      // CloseLoop
-			output_mode = CTRE::MotorControl::ControlMode::kPosition;
+			output_mode = ControlMode::Position;
 			break;
-		case hardware_interface::TalonMode_Speed:         // CloseLoop
-			output_mode = CTRE::MotorControl::ControlMode::kSpeed;
+		case hardware_interface::TalonMode_Velocity:      // CloseLoop
+			output_mode = ControlMode::Velocity;
 			break;
 		case hardware_interface::TalonMode_Current:       // CloseLoop
-			output_mode = CTRE::MotorControl::ControlMode::kCurrent;
-			break;
-		case hardware_interface::TalonMode_Voltage:
-			output_mode = CTRE::MotorControl::ControlMode::kVoltage;
+			output_mode = ControlMode::Current;
 			break;
 		case hardware_interface::TalonMode_Follower:
-			output_mode = CTRE::MotorControl::ControlMode::kFollower;
+			output_mode = ControlMode::Follower;
 			break;
 		case hardware_interface::TalonMode_MotionProfile:
-			output_mode = CTRE::MotorControl::ControlMode::kMotionProfile;
+			output_mode = ControlMode::MotionProfile;
 			break;
 		case hardware_interface::TalonMode_MotionMagic:
-			output_mode = CTRE::MotorControl::ControlMode::kMotionMagic;
+			output_mode = ControlMode::MotionMagic;
+			break;
+		case hardware_interface::TalonMode_TimedPercentOutput:
+			output_mode = ControlMode::TimedPercentOutput;
+			break;
+		case hardware_interface::TalonMode_Disabled:
+			output_mode = ControlMode::Disabled;
 			break;
 		default:
-			output_mode = CTRE::MotorControl::ControlMode::kDisabled;
+			output_mode = ControlMode::Disabled;
 			ROS_WARN("Unknown mode seen in HW interface");
 			return false;
 	}
