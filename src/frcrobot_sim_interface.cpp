@@ -140,11 +140,11 @@ void FRCRobotSimInterface::write(ros::Duration &elapsed_time)
 			}
 		}
 		bool invert;
-		bool invert_sensor_direction;
-		if(talon_command_[joint_id].invertChanged(invert, invert_sensor_direction))
+		bool sensor_phase;
+		if(talon_command_[joint_id].invertChanged(invert, sensor_phase))
 		{
 			talon_state_[joint_id].setInvert(invert);
-			talon_state_[joint_id].setInvertSensorDirection(invert_sensor_direction);
+			talon_state_[joint_id].setSensorPhase(sensor_phase);
 		}
 		
 		// Follower doesn't need to be updated - used the
@@ -161,8 +161,8 @@ void FRCRobotSimInterface::write(ros::Duration &elapsed_time)
 		if (speed_changed)
 			talon_state_[joint_id].setSetpoint(speed);
 
-		talon_state_[joint_id].setPosition(talon_state_[joint_id].getPosition() + (invert_sensor_direction ? -1 : 1 ) * speed * elapsed_time.toSec());
-		talon_state_[joint_id].setSpeed((invert_sensor_direction ? -1 : 1 ) * speed);
+		talon_state_[joint_id].setPosition(talon_state_[joint_id].getPosition() + (sensor_phase ? -1 : 1 ) * speed * elapsed_time.toSec());
+		talon_state_[joint_id].setSpeed((sensor_phase ? -1 : 1 ) * speed);
 	}
 	for (std::size_t joint_id = 0; joint_id < num_nidec_brushlesses_; ++joint_id)
 	{

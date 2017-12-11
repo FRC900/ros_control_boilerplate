@@ -41,7 +41,7 @@
 
 #include <thread>
 #include <ros_control_boilerplate/frc_robot_interface.h>
-#include <ctre/phoenix/MotorControl/SmartMotorController.h>
+#include <ctre/phoenix/MotorControl/CAN/TalonSRX.h>
 #include <IterativeRobot.h>
 #include <DriverStation.h>
 
@@ -144,9 +144,8 @@ protected:
 
 private:
   bool convertControlMode(const hardware_interface::TalonMode input_mode,
-						  CTRE::MotorControl::ControlMode::SmartControlMode &output_mode);
-  std::vector<std::shared_ptr<CTRE::MotorControl::SmartMotorController>> can_talons_;
-  std::vector<bool> can_talon_enabled_;
+						  ControlMode &output_mode);
+  std::vector<std::shared_ptr<CTRE::MotorControl::CAN::TalonSRX>> can_talons_;
   std::vector<std::shared_ptr<frc::NidecBrushless>> nidec_brushlesses_;
 
   std::thread hal_thread_;
