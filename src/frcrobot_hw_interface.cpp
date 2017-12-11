@@ -44,7 +44,7 @@
 #include "HAL/DriverStation.h"
 #include "HAL/HAL.h"
 //#include "Joystick.h"
-#include "joystick.h"
+#include "GenericHID"
 #include "math.h"
 
 //TODO Make nativeU configurable
