@@ -233,6 +233,16 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 		  talon_state_[joint_id].setSensorPhase(sensor_phase);
 	  }
 
+	  
+	  hardware_interface::NeutralMode neutral_mode;
+	  NeutralMode ctre_neutral_mode;
+
+	  if(talon_command_[joint_id].neutralModeChanged(neutral_mode) && 
+		 convertNeutralMode(neutral_mode, ctre_neutral_mode))
+	  {
+		  can_talons_[joint_id]->SetNeutralMode(ctre_neutral_mode);
+		  talon_state_[joint_id].setNeutralMode(neutral_mode);
+	  }
 
 	  // Set new motor setpoint if either the mode or
 	  // the setpoint has been changed 
@@ -343,6 +353,30 @@ bool FRCRobotHWInterface::convertControlMode(
 		default:
 			output_mode = ControlMode::Disabled;
 			ROS_WARN("Unknown mode seen in HW interface");
+			return false;
+	}
+
+	return true;
+}
+
+bool FRCRobotHWInterface::convertNeutralMode(
+		const hardware_interface::NeutralMode input_mode, 
+		NeutralMode &output_mode)
+{
+	switch (input_mode)
+	{
+		case hardware_interface::NeutralMode_EEPROM_Setting:
+			output_mode = EEPROMSetting;
+			break;
+		case hardware_interface::NeutralMode_Coast:
+			output_mode = Coast;
+			break;
+		case hardware_interface::NeutralMode_Brake:
+			output_mode = Brake;
+			break;
+		default:
+			output_mode = EEPROMSetting;
+			ROS_WARN("Unknown neutral mode seen in HW interface");
 			return false;
 	}
 
