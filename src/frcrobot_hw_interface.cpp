@@ -289,7 +289,6 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 		  talon_state_[joint_id].setInvert(invert);
 		  talon_state_[joint_id].setSensorPhase(sensor_phase);
 	  }
-
 	  
 	  hardware_interface::NeutralMode neutral_mode;
 	  NeutralMode ctre_neutral_mode;
@@ -308,7 +307,7 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 	  }
 
 	  float iaccum;
-	  if (talon_command_[joint_id].iaccumChanged(iaccum))
+	  if (talon_command_[joint_id].integralAccumulatorChanged(iaccum))
 	  {
 		  can_talons_[joint_id]->SetIntegralAccumulator(iaccum, 0);
 		  // Do not set talon state - this changes
