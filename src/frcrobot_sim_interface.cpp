@@ -123,10 +123,10 @@ void FRCRobotSimInterface::write(ros::Duration &elapsed_time)
 			talon_state_[joint_id].setSlot(slot);
 		}
 
-		double p;
-		double i;
-		double d;
-		double f;
+		float p;
+		float i;
+		float d;
+		float f;
 		unsigned iz;
 		for (int j = 0; j < 2; j++) {
 			if(talon_command_[joint_id].pidfChanged(p, i, d, f, iz, j))
@@ -153,7 +153,7 @@ void FRCRobotSimInterface::write(ros::Duration &elapsed_time)
 			continue;
 		
 		// Assume instant acceleration for now
-		double speed;
+		float speed;
 
 		bool speed_changed = talon_command_[joint_id].get(speed);
 		if (invert)
@@ -167,7 +167,7 @@ void FRCRobotSimInterface::write(ros::Duration &elapsed_time)
 	for (std::size_t joint_id = 0; joint_id < num_nidec_brushlesses_; ++joint_id)
 	{
 		// Assume instant acceleration for now
-		const double vel = brushless_command_[joint_id];
+		const float vel = brushless_command_[joint_id];
 		brushless_pos_[joint_id] += vel * elapsed_time.toSec();
 		brushless_vel_[joint_id] = vel;
 	}

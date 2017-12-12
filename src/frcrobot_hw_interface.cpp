@@ -126,8 +126,7 @@ void FRCRobotHWInterface::hal_keepalive_thread(void) {
 		joystick_state_[0].buttonStart.press   	 = joystick.GetRawButtonPressed(8);
 		joystick_state_[0].buttonStart.release 	 = joystick.GetRawButtonReleased(8);
 		
-		
-		joystick_state_[0].stickLeft.button	 = joystick.GetRawButton(9);
+		joystick_state_[0].stickLeft.button	     = joystick.GetRawButton(9);
 		joystick_state_[0].stickLeft.press   	 = joystick.GetRawButtonPressed(9);
 		joystick_state_[0].stickLeft.release 	 = joystick.GetRawButtonReleased(9);
 		
@@ -245,11 +244,11 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 		  talon_state_[joint_id].setSlot(slot);
 	  }
 
-	  double p;
-	  double i;
-	  double d;
-	  double f;
-	  unsigned iz;
+	  float p;
+	  float i;
+	  float d;
+	  float f;
+	  int   iz;
 	  for (int j = 0; j < 2; j++) {
 		  if(talon_command_[joint_id].pidfChanged(p, i, d, f, iz, j))
 		  {
@@ -293,7 +292,7 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 
 	  // Set new motor setpoint if either the mode or
 	  // the setpoint has been changed 
-	  double command;
+	  float command;
 	  hardware_interface::TalonMode in_mode;
 	  ControlMode out_mode;
 	  if ((talon_command_[joint_id].newMode(in_mode) || 
