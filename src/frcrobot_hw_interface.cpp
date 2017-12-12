@@ -43,8 +43,8 @@
 #include <ros_control_boilerplate/frcrobot_hw_interface.h>
 #include "HAL/DriverStation.h"
 #include "HAL/HAL.h"
-//#include "Joystick.h"
-#include "GenericHID"
+#include "Joystick.h"
+//#include "GenericHID.h"
 #include "math.h"
 
 //TODO Make nativeU configurable
@@ -71,7 +71,7 @@ FRCRobotHWInterface::~FRCRobotHWInterface()
 void FRCRobotHWInterface::hal_keepalive_thread(void) {
 	// Just throw a basic IterativeRobot in here instead?
 	run_hal_thread_ = true;
-	GenericHID joystick(0);
+	Joystick joystick(0);
 	while (run_hal_thread_) {
 		robot_.OneIteration();
 		// Things to keep track of
