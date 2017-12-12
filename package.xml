@@ -32,6 +32,7 @@
   <depend>sensor_msgs</depend>
   <depend>rosparam_shortcuts</depend>
   <depend>talon_interface</depend>
+  <depend>joystick_interface</depend>
 
   <export>
   </export>

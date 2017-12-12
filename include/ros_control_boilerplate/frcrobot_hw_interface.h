@@ -44,7 +44,7 @@
 #include <ctre/phoenix/MotorControl/CAN/TalonSRX.h>
 #include <IterativeRobot.h>
 #include <DriverStation.h>
-
+#include "GenericHID"
 #include <NidecBrushless.h>
 
 namespace frcrobot_control
@@ -147,7 +147,7 @@ private:
 						  ControlMode &output_mode);
   std::vector<std::shared_ptr<CTRE::MotorControl::CAN::TalonSRX>> can_talons_;
   std::vector<std::shared_ptr<frc::NidecBrushless>> nidec_brushlesses_;
-
+  std::vector<std::shared_ptr<GenericHID>> joysticks_;
   std::thread hal_thread_;
   bool        run_hal_thread_;
 

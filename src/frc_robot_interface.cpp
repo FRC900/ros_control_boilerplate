@@ -117,6 +117,19 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 		  nidec_brushless_pwm_channels_.push_back(pwm_channel);
 		  nidec_brushless_dio_channels_.push_back(dio_channel);
 	  }
+	  else if (joint_type == "joystick")
+	  {
+		  if (!joint_params.hasMember("joystick_id"))
+			  throw std::runtime_error("A joystick_id was not specified");
+		  XmlRpc::XmlRpcValue& xml_can_id = joint_params["joystick_id"];
+		  if (!xml_joystick_id.valid() ||
+				  xml_joystick_id.getType() != XmlRpc::XmlRpcValue::TypeInt)
+			  throw std::runtime_error("An invalid joint joystick_id was specified (expecting an int).");
+		  const int joystick_id = xml_joystick_id;
+
+		  joystick_names_.push_back(joint_name);
+		  joystick_ids_.push_back(joystick_id);
+	  }
 	  else
 	  {
 		  std::stringstream s;
@@ -133,6 +146,8 @@ void FRCRobotInterface::init()
 	// Create vectors of the correct size for
 	// talon HW state and commands
 	talon_command_.resize(num_can_talon_srxs_);
+	num_joysticks = joystick_names.size();
+	joystick_command_.resize(num_joysticks);
 
 	// Loop through the list of joint names
 	// specified as params for the hardware_interface.
@@ -168,6 +183,35 @@ void FRCRobotInterface::init()
 		talon_command_interface_.registerHandle(talon_command_handle);
 	}
 
+	for (size_t i = 0; i < num_joysticks; i++)
+	{
+		ROS_INFO_STREAM_NAMED(name_, "FRCRobotHWInterface: Registering Joystick Interface for " << joystick_names_[i] << " at hw ID " << joystick_ids_[i]);
+
+		// Create joint state interface
+		// Also register as JointStateInterface so that legacy
+		// ROS code which uses that object type can 
+		// access basic state info from the talon
+		// Code which needs more specific status should
+		// get a TalonStateHandle instead.
+		joystick_state_.push_back(hardware_interface::JoystickHWState(joystick_ids_[i]));
+	}
+	for (size_t i = 0; i < num_can_talon_srxs_; i++)
+	{
+		// Create state interface for the given Talon
+		// and point it to the data stored in the
+		// corresponding talon_state array entry
+		hardware_interface::TalonStateHandle tsh(joystick_names_[i], &joystick_state_[i]);
+		talon_state_interface_.registerHandle(tsh);
+
+		// Do the same for a command interface for
+		// the same talon
+		hardware_interface::JoystickCommandHandle joystick_command_handle(tsh, &joystick_command_[i]);
+		joystick_command_interface_.registerHandle(joystick_command_handle);
+	}	
+
+
+
+
 	// Set vectors to correct size to hold data
 	// for each of the brushless motors we're trying 
 	// to control
@@ -201,8 +245,10 @@ void FRCRobotInterface::init()
 	joystick_state_.resize(1);
 	joint_state_interface_.registerHandle(hardware_interface::JointStateHandle("Joystick1", &joystick_state_[0].leftStickX, &joystick_state_[0].leftStickY, &joystick_state_[0].rightStickX));
 	registerInterface(&talon_state_interface_);
+	registerInterface(&joystick_state_interface_);
 	registerInterface(&joint_state_interface_);
 	registerInterface(&talon_command_interface_);
+	registerInterface(&joystick_command_interface_);
 	registerInterface(&joint_velocity_interface_);
 
 #if 0

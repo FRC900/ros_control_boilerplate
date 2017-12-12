@@ -87,6 +87,7 @@ void FRCRobotHWInterface::hal_keepalive_thread(void) {
 		//    files.
 		
 		//TODO: match gets with correct labels
+		/*
 		joystick_state_[0].leftStickX  = joystick.GetRawAxis(0);
 		joystick_state_[0].leftStickY  = joystick.GetRawAxis(1);
 		joystick_state_[0].rightStickX = joystick.GetRawAxis(4);
@@ -139,6 +140,7 @@ void FRCRobotHWInterface::hal_keepalive_thread(void) {
 		// Could do most of these via dummy joint handles. Since
 		// they read-only, create bogus state handles for them
 		// pointing to member vars in the FRCRobotInterface / FRCRobotHWInterface
+		*/
 	}
 }
 
@@ -174,6 +176,8 @@ void FRCRobotHWInterface::init(void)
 	{
 		nidec_brushlesses_.push_back(std::make_shared<frc::NidecBrushless>(nidec_brushless_pwm_channels_[i], nidec_brushless_dio_channels_[i]));
 	}
+	for(size_t i = 0; 
+	
 	ROS_INFO_NAMED("frcrobot_hw_interface", "FRCRobotHWInterface Ready.");
 }
 
