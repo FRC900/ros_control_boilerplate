@@ -43,7 +43,8 @@
 #include <ros_control_boilerplate/frcrobot_hw_interface.h>
 #include "HAL/DriverStation.h"
 #include "HAL/HAL.h"
-#include "Joystick.h"
+//#include "Joystick.h"
+#include "GenericHID"
 #include "math.h"
 
 //TODO Make nativeU configurable
@@ -70,7 +71,7 @@ FRCRobotHWInterface::~FRCRobotHWInterface()
 void FRCRobotHWInterface::hal_keepalive_thread(void) {
 	// Just throw a basic IterativeRobot in here instead?
 	run_hal_thread_ = true;
-	Joystick joystick(0);
+	GenericHID joystick(0);
 	while (run_hal_thread_) {
 		robot_.OneIteration();
 		// Things to keep track of
@@ -84,11 +85,57 @@ void FRCRobotHWInterface::hal_keepalive_thread(void) {
 		//    rumble state via an external joystick
 		//    controller, etc.  Need to set via config
 		//    files.
-		joystick_state_[0].x = joystick.GetX();
-		joystick_state_[0].y = joystick.GetY();
-		joystick_state_[0].z = joystick.GetZ();
+		
+		//TODO: match gets with correct labels
+		joystick_state_[0].leftStickX  = joystick.GetRawAxis(0);
+		joystick_state_[0].leftStickY  = joystick.GetRawAxis(1);
+		joystick_state_[0].rightStickX = joystick.GetRawAxis(4);
+		joystick_state_[0].rightStickY = joystick.GetRawAxis(5);
+		joystick_state_[0].leftTrigger = joystick.GetRawAxis(2);
+		joystick_state_[0].rightTrigger= joystick.GetRawAxis(3);
+		
+		joystick_state_[0].buttonA.button   	 = joystick.GetRawButton(1);
+		joystick_state_[0].buttonA.press    	 = joystick.GetRawButtonPressed(1);
+		joystick_state_[0].buttonA.release  	 = joystick.GetRawButtonReleased(1);
+		
+		joystick_state_[0].buttonB.button   	 = joystick.GetRawButton(2);
+		joystick_state_[0].buttonB.press    	 = joystick.GetRawButtonPressed(2);
+		joystick_state_[0].buttonB.release  	 = joystick.GetRawButtonReleased(2);
+		
+		joystick_state_[0].buttonX.button   	 = joystick.GetRawButton(3);
+		joystick_state_[0].buttonX.press    	 = joystick.GetRawButtonPressed(3);
+		joystick_state_[0].buttonX.release  	 = joystick.GetRawButtonReleased(3);
+		
+		joystick_state_[0].buttonY.button   	 = joystick.GetRawButton(4);
+		joystick_state_[0].buttonY.press    	 = joystick.GetRawButtonPressed(4);
+		joystick_state_[0].buttonY.release  	 = joystick.GetRawButtonReleased(4);
+		
+		joystick_state_[0].bumperLeft.button   	 = joystick.GetRawButton(5);
+		joystick_state_[0].bumperLeft.press    	 = joystick.GetRawButtonPressed(5);
+		joystick_state_[0].bumperLeft.release  	 = joystick.GetRawButtonReleased(5);
+		
+		joystick_state_[0].bumperRight.button    = joystick.GetRawButton(6);
+		joystick_state_[0].bumperRight.press     = joystick.GetRawButtonPressed(6);
+		joystick_state_[0].bumperRight.release   = joystick.GetRawButtonReleased(6);
 
-		// Maybe e-stop, FMS attached, ds attached
+		joystick_state_[0].buttonBack.button   	 = joystick.GetRawButton(7);
+		joystick_state_[0].buttonBack.press    	 = joystick.GetRawButtonPressed(7);
+		joystick_state_[0].buttonBack.release  	 = joystick.GetRawButtonReleased(7);
+		
+		joystick_state_[0].buttonStart.button    = joystick.GetRawButton(8);
+		joystick_state_[0].buttonStart.press   	 = joystick.GetRawButtonPressed(8);
+		joystick_state_[0].buttonStart.release 	 = joystick.GetRawButtonReleased(8);
+		
+		
+		joystick_state_[0].stickLeft.button	 = joystick.GetRawButton(9);
+		joystick_state_[0].stickLeft.press   	 = joystick.GetRawButtonPressed(9);
+		joystick_state_[0].stickLeft.release 	 = joystick.GetRawButtonReleased(9);
+		
+		joystick_state_[0].stickRight.button     = joystick.GetRawButton(10);
+		joystick_state_[0].stickRight.press   	 = joystick.GetRawButtonPressed(10);
+		joystick_state_[0].stickRight.release 	 = joystick.GetRawButtonReleased(10);
+		
+		//TODO: Add direction buttons
 		// Could do most of these via dummy joint handles. Since
 		// they read-only, create bogus state handles for them
 		// pointing to member vars in the FRCRobotInterface / FRCRobotHWInterface
