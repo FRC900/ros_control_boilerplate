@@ -290,6 +290,13 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 		  talon_state_[joint_id].setNeutralMode(neutral_mode);
 	  }
 
+	  if (talon_command_[joint_id].neutralOutputChanged())
+	  {
+		  can_talons_[joint_id]->NeutralOutput();
+		  talon_state_[joint_id].setNeutralOutput(true);
+	  }
+
+
 	  // Set new motor setpoint if either the mode or
 	  // the setpoint has been changed 
 	  float command;
@@ -312,6 +319,7 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 		  can_talons_[joint_id]->Set(out_mode, command);
 		  talon_state_[joint_id].setTalonMode(in_mode);
 		  talon_state_[joint_id].setSetpoint(command);
+		  talon_state_[joint_id].setNeutralOutput(false); // maybe make this a part of setSetpoint?
 	  }
   }
   for (size_t i = 0; i < num_nidec_brushlesses_; i++)
