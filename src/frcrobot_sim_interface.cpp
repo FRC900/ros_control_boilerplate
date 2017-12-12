@@ -127,7 +127,7 @@ void FRCRobotSimInterface::write(ros::Duration &elapsed_time)
 		float i;
 		float d;
 		float f;
-		unsigned iz;
+		int   iz;
 		for (int j = 0; j < 2; j++) {
 			if(talon_command_[joint_id].pidfChanged(p, i, d, f, iz, j))
 			{
