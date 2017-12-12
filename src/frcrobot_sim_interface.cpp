@@ -128,8 +128,10 @@ void FRCRobotSimInterface::write(ros::Duration &elapsed_time)
 		float d;
 		float f;
 		int   iz;
+		int   allowable_closed_loop_error;
+		float max_integral_accumulator;
 		for (int j = 0; j < 2; j++) {
-			if(talon_command_[joint_id].pidfChanged(p, i, d, f, iz, j))
+			if(talon_command_[joint_id].pidfChanged(p, i, d, f, iz, allowable_closed_loop_error, max_integral_accumulator, j))
 			{
 				ROS_INFO_STREAM("Updated joint " << joint_id << " PIDF slot " << j << " config values" << std::endl);
 				talon_state_[joint_id].setPidfP(p, j);
@@ -137,6 +139,9 @@ void FRCRobotSimInterface::write(ros::Duration &elapsed_time)
 				talon_state_[joint_id].setPidfD(d, j);
 				talon_state_[joint_id].setPidfF(f, j);
 				talon_state_[joint_id].setPidfIzone(iz, j);
+			talon_state_[joint_id].setAllowableClosedLoopError(allowable_closed_loop_error, j);
+			talon_state_[joint_id].setMaxIntegralAccumulator(max_integral_accumulator, j);
+				
 			}
 		}
 		bool invert;

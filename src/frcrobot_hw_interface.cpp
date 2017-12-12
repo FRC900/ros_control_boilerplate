@@ -208,6 +208,14 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 	  can_talons_[joint_id]->GetClosedLoopError(closed_loop_error);
 	  talon_state_[joint_id].setClosedLoopError(closed_loop_error);
 
+	  float integral_accumulator;
+	  can_talons_[joint_id]->GetIntegralAccumulator(integral_accumulator);
+	  talon_state_[joint_id].setIntegralAccumulator(integral_accumulator);
+
+	  float error_derivative;
+	  can_talons_[joint_id]->GetErrorDerivative(error_derivative);
+	  talon_state_[joint_id].setErrorDerivative(error_derivative);
+
 	  // TODO :: Fix me
 	  //talon_state_[joint_id].setFwdLimitSwitch(can_talons_[joint_id]->IsFwdLimitSwitchClosed());
 	  //talon_state_[joint_id].setRevLimitSwitch(can_talons_[joint_id]->IsRevLimitSwitchClosed());
@@ -249,23 +257,26 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 	  float d;
 	  float f;
 	  int   iz;
+	  int   allowable_closed_loop_error;
+	  float max_integral_accumulator;
 	  for (int j = 0; j < 2; j++) {
-		  if(talon_command_[joint_id].pidfChanged(p, i, d, f, iz, j))
+		  if(talon_command_[joint_id].pidfChanged(p, i, d, f, iz, allowable_closed_loop_error, max_integral_accumulator, j))
 		  {
 			can_talons_[joint_id]->Config_kP(j, p, 0);
 			can_talons_[joint_id]->Config_kI(j, i, 0);
 			can_talons_[joint_id]->Config_kD(j, d, 0);
 			can_talons_[joint_id]->Config_kF(j, f, 0);
 			can_talons_[joint_id]->Config_IntegralZone(j, iz, 0);
-			// TODO (plus corresponding talon_state_ below)
-			//   can_talons_[joint_id]->Config_AllowableClosedloopError(j, );
-			//   can_talons_[joint_id]->Config_IntegralAccumulator(j, );
-	
+			can_talons_[joint_id]->ConfigAllowableClosedloopError(j, allowable_closed_loop_error, 0);
+			can_talons_[joint_id]->ConfigMaxIntegralAccumulator(j, max_integral_accumulator, 0);
+
 			talon_state_[joint_id].setPidfP(p, j);
 			talon_state_[joint_id].setPidfI(i, j);
 			talon_state_[joint_id].setPidfD(d, j);
 			talon_state_[joint_id].setPidfF(f, j);
 			talon_state_[joint_id].setPidfIzone(iz, j);
+			talon_state_[joint_id].setAllowableClosedLoopError(allowable_closed_loop_error, j);
+			talon_state_[joint_id].setMaxIntegralAccumulator(max_integral_accumulator, j);
 	  	}
 	  }
 
@@ -294,6 +305,14 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 	  {
 		  can_talons_[joint_id]->NeutralOutput();
 		  talon_state_[joint_id].setNeutralOutput(true);
+	  }
+
+	  float iaccum;
+	  if (talon_command_[joint_id].iaccumChanged(iaccum))
+	  {
+		  can_talons_[joint_id]->SetIntegralAccumulator(iaccum, 0);
+		  // Do not set talon state - this changes
+		  // dynamically so read it in read() above instead
 	  }
 
 
