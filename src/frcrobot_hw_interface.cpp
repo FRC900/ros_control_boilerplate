@@ -159,13 +159,10 @@ void FRCRobotHWInterface::init(void)
 
 		// Need config information for each talon
 		// Should probably be part of YAML params for controller
-		// set initial mode - no, depend on controller
-		// set PIDF constants for both slots (read from nh params) - no, set from controller if needed
 		// set close loop ramp rate - same as above
 		// set voltage compensation rate
 		// set soft limits - forward/reverse limits and enables - yes
 		// set limit switch config - enable, NO/NC  - probably yes
-		// set encoder config / reverse  - yes
 
 		can_talons_[i]->Set(ControlMode::Disabled, 0); // Make sure motor is stopped
 	}
@@ -204,6 +201,7 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 	  can_talons_[joint_id]->GetOutputCurrent(output_current);
 	  talon_state_[joint_id].setOutputCurrent(output_current);
 
+	  // Scale this from native units 
 	  int closed_loop_error;
 	  can_talons_[joint_id]->GetClosedLoopError(closed_loop_error);
 	  talon_state_[joint_id].setClosedLoopError(closed_loop_error);
