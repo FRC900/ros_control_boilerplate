@@ -185,8 +185,8 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 	  // mode, encoder choice and maybe a user-configurable ticks/rotation
 	  // setting and converts from native units to radians (for position)
 	  // and radians/src (for velocity)
-	  talon_state_[joint_id].setPosition(can_talons_[joint_id]->GetSelectedSensorPosition()/4096*2*M_PI);
-	  talon_state_[joint_id].setSpeed(can_talons_[joint_id]->GetSelectedSensorVelocity()/4096*2*M_PI/.1);
+	  talon_state_[joint_id].setPosition(can_talons_[joint_id]->GetSelectedSensorPosition()/4096.*2*M_PI);
+	  talon_state_[joint_id].setSpeed(can_talons_[joint_id]->GetSelectedSensorVelocity()/4096.*2*M_PI/.1);
 
 	  float bus_voltage;
 	  can_talons_[joint_id]->GetBusVoltage(bus_voltage);
@@ -324,12 +324,12 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 	  {
 		  switch (out_mode) {
 			  case ControlMode::Velocity:
-				  command = command/2/M_PI*nativeU*.1; //assumes input value is velocity per 100ms there is a chance it is supposed to be 10ms
+				  command = command/2./M_PI*nativeU*.1; //assumes input value is velocity per 100ms there is a chance it is supposed to be 10ms
 				  //RG: I am almost certain that it isn't 10 ms. However, if you configure some of the units
 				  //using one of the talon functions,  the units are RPM and Rotations
 				  break;
 			  case ControlMode::Position:
-				  command = command/2/M_PI*nativeU;
+				  command = command/2./M_PI*nativeU;
 				  break;
 		  }
 		  can_talons_[joint_id]->Set(out_mode, command);
