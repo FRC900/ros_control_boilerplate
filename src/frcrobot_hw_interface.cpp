@@ -313,6 +313,38 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 	  }
 
 
+	  float closed_loop_ramp;
+	  float open_loop_ramp;
+	  float peak_output_forward;
+	  float peak_output_reverse;
+	  float nominal_output_forward;
+	  float nominal_output_reverse;
+	  float neutral_deadband;
+	  if (talon_command_[joint_id].outputShapingChanged(closed_loop_ramp,
+														open_loop_ramp,
+														peak_output_forward,
+														peak_output_reverse,
+														nominal_output_forward,
+														nominal_output_reverse,
+														neutral_deadband))
+	  {
+		  can_talons_[joint_id]->ConfigOpenloopRamp(open_loop_ramp, 0);
+		  can_talons_[joint_id]->ConfigClosedloopRamp(closed_loop_ramp, 0);
+		  can_talons_[joint_id]->ConfigPeakOutputForward(peak_output_forward, 0);
+		  can_talons_[joint_id]->ConfigPeakOutputReverse(peak_output_reverse, 0);
+		  can_talons_[joint_id]->ConfigNominalOutputForward(nominal_output_forward, 0);
+		  can_talons_[joint_id]->ConfigNominalOutputReverse(nominal_output_reverse, 0);
+		  can_talons_[joint_id]->ConfigNeutralDeadband(neutral_deadband, 0);
+
+		  talon_state_[joint_id].setOpenloopRamp(open_loop_ramp);
+		  talon_state_[joint_id].setClosedloopRamp(closed_loop_ramp);
+		  talon_state_[joint_id].setPeakOutputForward(peak_output_forward);
+		  talon_state_[joint_id].setPeakOutputReverse(peak_output_reverse);
+		  talon_state_[joint_id].setNominalOutputForward(nominal_output_forward);
+		  talon_state_[joint_id].setNominalOutputReverse(nominal_output_reverse);
+	  }
+
+
 	  // Set new motor setpoint if either the mode or
 	  // the setpoint has been changed 
 	  float command;
