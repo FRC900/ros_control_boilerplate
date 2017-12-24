@@ -343,6 +343,22 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 		  talon_state_[joint_id].setNominalOutputForward(nominal_output_forward);
 		  talon_state_[joint_id].setNominalOutputReverse(nominal_output_reverse);
 	  }
+	  float v_c_saturation;
+	  int v_measurement_filter;
+	  bool v_c_enable;
+	  if (talon_command_[joint_id].VoltageCompensationChanged(v_c_saturation,
+															  v_measurement_filter,
+															  v_c_enable))
+	  {
+		  can_talons_[joint_id]->ConfigVoltageCompSaturation(v_c_saturation, 0);
+		  can_talons_[joint_id]->ConfigVoltageMeasurementFilter(v_measurement_filter, 0);
+		  can_talons_[joint_id]->EnableVoltageCompensation(v_c_enable);
+
+		  talon_state_[joint_id].setVoltageCompensationSaturation(v_c_saturation);
+		  talon_state_[joint_id].setVoltageMeasurementFilter(v_measurement_filter);
+		  talon_state_[joint_id].setVoltageCompensationEnable(v_c_enable);
+
+	  }
 
 
 	  // Set new motor setpoint if either the mode or
