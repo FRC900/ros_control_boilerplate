@@ -144,11 +144,11 @@ protected:
 
 private:
   bool convertControlMode(const hardware_interface::TalonMode input_mode,
-						  ControlMode &output_mode);
+						  ctre::phoenix::motorcontrol::ControlMode &output_mode);
   bool convertNeutralMode(const hardware_interface::NeutralMode input_mode, 
-		  NeutralMode &output_mode);
+		  ctre::phoenix::motorcontrol::NeutralMode &output_mode);
 
-  std::vector<std::shared_ptr<CTRE::MotorControl::CAN::TalonSRX>> can_talons_;
+  std::vector<std::shared_ptr<ctre::phoenix::motorcontrol::can::TalonSRX>> can_talons_;
   std::vector<std::shared_ptr<frc::NidecBrushless>> nidec_brushlesses_;
 
   std::thread hal_thread_;

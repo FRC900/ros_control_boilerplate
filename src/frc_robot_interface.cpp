@@ -308,7 +308,7 @@ void FRCRobotInterface::registerJointLimits(const hardware_interface::JointHandl
   // Copy position limits if available
   if (joint_limits.has_position_limits)
   {
-    // Slighly reduce the joint limits to prevent floating point errors
+    // Slighly reduce the joint limits to prevent doubleing point errors
     joint_limits.min_position += std::numeric_limits<double>::epsilon();
     joint_limits.max_position -= std::numeric_limits<double>::epsilon();
 
@@ -396,7 +396,7 @@ std::string FRCRobotInterface::printCommandHelper()
   ss << "    setpoint" << std::endl;
   for (std::size_t i = 0; i < num_can_talon_srxs_; ++i)
   {
-	float setpoint;
+	double setpoint;
    	talon_command_[i].get(setpoint);
     ss << "j" << i << ": " << std::fixed << setpoint<< std::endl;
   }

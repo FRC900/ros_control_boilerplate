@@ -47,14 +47,18 @@
 //#include "GenericHID.h"
 #include "math.h"
 
+namespace frcrobot_control
+{
+// TODO : figure out what these mean
+const int pidIdx = 0;
+const int timeoutMs = 0;
+
 //TODO Make nativeU configurable
 int nativeU = 4096;   //native units of ctre magnetic encoders
 //RG: More than just making nativeU configurable, we should consider a much more automated system
 //i.e. set conversion factor based on specified feedback sensor
 //note that you can add a conversion factors that will automatically be applied for speed and position
 
-namespace frcrobot_control
-{
 
 FRCRobotHWInterface::FRCRobotHWInterface(ros::NodeHandle &nh, urdf::Model *urdf_model)
   : ros_control_boilerplate::FRCRobotInterface(nh, urdf_model),
@@ -155,7 +159,7 @@ void FRCRobotHWInterface::init(void)
 
 	for (size_t i = 0; i < num_can_talon_srxs_; i++)
 	{
-		can_talons_.push_back(std::make_shared<CTRE::MotorControl::CAN::TalonSRX>(can_talon_srx_can_ids_[i] /*, CAN update rate*/ ));
+		can_talons_.push_back(std::make_shared<ctre::phoenix::motorcontrol::can::TalonSRX>(can_talon_srx_can_ids_[i] /*, CAN update rate*/ ));
 
 		// Need config information for each talon
 		// Should probably be part of YAML params for controller
@@ -164,7 +168,7 @@ void FRCRobotHWInterface::init(void)
 		// set soft limits - forward/reverse limits and enables - yes
 		// set limit switch config - enable, NO/NC  - probably yes
 
-		can_talons_[i]->Set(ControlMode::Disabled, 0); // Make sure motor is stopped
+		can_talons_[i]->Set(ctre::phoenix::motorcontrol::ControlMode::Disabled, 0); // Make sure motor is stopped
 	}
 	for (size_t i = 0; i < num_nidec_brushlesses_; i++)
 	{
@@ -185,20 +189,18 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 	  // mode, encoder choice and maybe a user-configurable ticks/rotation
 	  // setting and converts from native units to radians (for position)
 	  // and radians/src (for velocity)
-	  talon_state_[joint_id].setPosition(can_talons_[joint_id]->GetSelectedSensorPosition()/4096.*2*M_PI);
-	  talon_state_[joint_id].setSpeed(can_talons_[joint_id]->GetSelectedSensorVelocity()/4096.*2*M_PI/.1);
+	  talon_state_[joint_id].setPosition(can_talons_[joint_id]->GetSelectedSensorPosition(pidIdx)/4096.*2*M_PI);
+	  talon_state_[joint_id].setSpeed(can_talons_[joint_id]->GetSelectedSensorVelocity(pidIdx)/4096.*2*M_PI/.1);
 
-	  float bus_voltage;
-	  can_talons_[joint_id]->GetBusVoltage(bus_voltage);
+	  double bus_voltage = can_talons_[joint_id]->GetBusVoltage();
 	  talon_state_[joint_id].setBusVoltage(bus_voltage);
-	  float motor_output_percent;
-	  can_talons_[joint_id]->GetMotorOutputPercent(motor_output_percent);
+
+	  double motor_output_percent = can_talons_[joint_id]->GetMotorOutputPercent();
 	  talon_state_[joint_id].setMotorOutputPercent(motor_output_percent);
-	  float output_voltage;
-	  can_talons_[joint_id]->GetMotorOutputVoltage(output_voltage);
+
+	  double output_voltage = can_talons_[joint_id]->GetMotorOutputVoltage();
 	  talon_state_[joint_id].setOutputVoltage(output_voltage);
-	  float output_current;
-	  can_talons_[joint_id]->GetOutputCurrent(output_current);
+	  double output_current = can_talons_[joint_id]->GetOutputCurrent();
 	  talon_state_[joint_id].setOutputCurrent(output_current);
 
 	  // Scale this from native units 
@@ -206,11 +208,11 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 	  can_talons_[joint_id]->GetClosedLoopError(closed_loop_error);
 	  talon_state_[joint_id].setClosedLoopError(closed_loop_error);
 
-	  float integral_accumulator;
+	  double integral_accumulator;
 	  can_talons_[joint_id]->GetIntegralAccumulator(integral_accumulator);
 	  talon_state_[joint_id].setIntegralAccumulator(integral_accumulator);
 
-	  float error_derivative;
+	  double error_derivative;
 	  can_talons_[joint_id]->GetErrorDerivative(error_derivative);
 	  talon_state_[joint_id].setErrorDerivative(error_derivative);
 
@@ -246,27 +248,27 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 	  int slot;
 	  if(talon_command_[joint_id].slotChanged(slot))
 	  {
-		  can_talons_[joint_id]->SelectProfileSlot(slot);
+		  can_talons_[joint_id]->SelectProfileSlot(slot, timeoutMs);
 		  talon_state_[joint_id].setSlot(slot);
 	  }
 
-	  float p;
-	  float i;
-	  float d;
-	  float f;
-	  int   iz;
-	  int   allowable_closed_loop_error;
-	  float max_integral_accumulator;
+	  double p;
+	  double i;
+	  double d;
+	  double f;
+	  int    iz;
+	  int    allowable_closed_loop_error;
+	  double max_integral_accumulator;
 	  for (int j = 0; j < 2; j++) {
 		  if(talon_command_[joint_id].pidfChanged(p, i, d, f, iz, allowable_closed_loop_error, max_integral_accumulator, j))
 		  {
-			can_talons_[joint_id]->Config_kP(j, p, 0);
-			can_talons_[joint_id]->Config_kI(j, i, 0);
-			can_talons_[joint_id]->Config_kD(j, d, 0);
-			can_talons_[joint_id]->Config_kF(j, f, 0);
-			can_talons_[joint_id]->Config_IntegralZone(j, iz, 0);
-			can_talons_[joint_id]->ConfigAllowableClosedloopError(j, allowable_closed_loop_error, 0);
-			can_talons_[joint_id]->ConfigMaxIntegralAccumulator(j, max_integral_accumulator, 0);
+			can_talons_[joint_id]->Config_kP(j, p, timeoutMs);
+			can_talons_[joint_id]->Config_kI(j, i, timeoutMs);
+			can_talons_[joint_id]->Config_kD(j, d, timeoutMs);
+			can_talons_[joint_id]->Config_kF(j, f, timeoutMs);
+			can_talons_[joint_id]->Config_IntegralZone(j, iz, timeoutMs);
+			can_talons_[joint_id]->ConfigAllowableClosedloopError(j, allowable_closed_loop_error, timeoutMs);
+			can_talons_[joint_id]->ConfigMaxIntegralAccumulator(j, max_integral_accumulator, timeoutMs);
 
 			talon_state_[joint_id].setPidfP(p, j);
 			talon_state_[joint_id].setPidfI(i, j);
@@ -289,7 +291,7 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 	  }
 	  
 	  hardware_interface::NeutralMode neutral_mode;
-	  NeutralMode ctre_neutral_mode;
+	  ctre::phoenix::motorcontrol::NeutralMode ctre_neutral_mode;
 
 	  if(talon_command_[joint_id].neutralModeChanged(neutral_mode) && 
 		 convertNeutralMode(neutral_mode, ctre_neutral_mode))
@@ -304,22 +306,22 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 		  talon_state_[joint_id].setNeutralOutput(true);
 	  }
 
-	  float iaccum;
+	  double iaccum;
 	  if (talon_command_[joint_id].integralAccumulatorChanged(iaccum))
 	  {
-		  can_talons_[joint_id]->SetIntegralAccumulator(iaccum, 0);
+		  can_talons_[joint_id]->SetIntegralAccumulator(iaccum, pidIdx, timeoutMs);
 		  // Do not set talon state - this changes
 		  // dynamically so read it in read() above instead
 	  }
 
 
-	  float closed_loop_ramp;
-	  float open_loop_ramp;
-	  float peak_output_forward;
-	  float peak_output_reverse;
-	  float nominal_output_forward;
-	  float nominal_output_reverse;
-	  float neutral_deadband;
+	  double closed_loop_ramp;
+	  double open_loop_ramp;
+	  double peak_output_forward;
+	  double peak_output_reverse;
+	  double nominal_output_forward;
+	  double nominal_output_reverse;
+	  double neutral_deadband;
 	  if (talon_command_[joint_id].outputShapingChanged(closed_loop_ramp,
 														open_loop_ramp,
 														peak_output_forward,
@@ -328,13 +330,13 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 														nominal_output_reverse,
 														neutral_deadband))
 	  {
-		  can_talons_[joint_id]->ConfigOpenloopRamp(open_loop_ramp, 0);
-		  can_talons_[joint_id]->ConfigClosedloopRamp(closed_loop_ramp, 0);
-		  can_talons_[joint_id]->ConfigPeakOutputForward(peak_output_forward, 0);
-		  can_talons_[joint_id]->ConfigPeakOutputReverse(peak_output_reverse, 0);
-		  can_talons_[joint_id]->ConfigNominalOutputForward(nominal_output_forward, 0);
-		  can_talons_[joint_id]->ConfigNominalOutputReverse(nominal_output_reverse, 0);
-		  can_talons_[joint_id]->ConfigNeutralDeadband(neutral_deadband, 0);
+		  can_talons_[joint_id]->ConfigOpenloopRamp(open_loop_ramp, timeoutMs);
+		  can_talons_[joint_id]->ConfigClosedloopRamp(closed_loop_ramp, timeoutMs);
+		  can_talons_[joint_id]->ConfigPeakOutputForward(peak_output_forward, timeoutMs);
+		  can_talons_[joint_id]->ConfigPeakOutputReverse(peak_output_reverse, timeoutMs);
+		  can_talons_[joint_id]->ConfigNominalOutputForward(nominal_output_forward, timeoutMs);
+		  can_talons_[joint_id]->ConfigNominalOutputReverse(nominal_output_reverse, timeoutMs);
+		  can_talons_[joint_id]->ConfigNeutralDeadband(neutral_deadband, timeoutMs);
 
 		  talon_state_[joint_id].setOpenloopRamp(open_loop_ramp);
 		  talon_state_[joint_id].setClosedloopRamp(closed_loop_ramp);
@@ -343,15 +345,15 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 		  talon_state_[joint_id].setNominalOutputForward(nominal_output_forward);
 		  talon_state_[joint_id].setNominalOutputReverse(nominal_output_reverse);
 	  }
-	  float v_c_saturation;
+	  double v_c_saturation;
 	  int v_measurement_filter;
 	  bool v_c_enable;
 	  if (talon_command_[joint_id].VoltageCompensationChanged(v_c_saturation,
 															  v_measurement_filter,
 															  v_c_enable))
 	  {
-		  can_talons_[joint_id]->ConfigVoltageCompSaturation(v_c_saturation, 0);
-		  can_talons_[joint_id]->ConfigVoltageMeasurementFilter(v_measurement_filter, 0);
+		  can_talons_[joint_id]->ConfigVoltageCompSaturation(v_c_saturation, timeoutMs);
+		  can_talons_[joint_id]->ConfigVoltageMeasurementFilter(v_measurement_filter, timeoutMs);
 		  can_talons_[joint_id]->EnableVoltageCompensation(v_c_enable);
 
 		  talon_state_[joint_id].setVoltageCompensationSaturation(v_c_saturation);
@@ -363,20 +365,20 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 
 	  // Set new motor setpoint if either the mode or
 	  // the setpoint has been changed 
-	  float command;
+	  double command;
 	  hardware_interface::TalonMode in_mode;
-	  ControlMode out_mode;
+	  ctre::phoenix::motorcontrol::ControlMode out_mode;
 	  if ((talon_command_[joint_id].newMode(in_mode) || 
 	       talon_command_[joint_id].get(command) ) &&
 	      convertControlMode(in_mode, out_mode))
 	  {
 		  switch (out_mode) {
-			  case ControlMode::Velocity:
+			  case ctre::phoenix::motorcontrol::ControlMode::Velocity:
 				  command = command/2./M_PI*nativeU*.1; //assumes input value is velocity per 100ms there is a chance it is supposed to be 10ms
 				  //RG: I am almost certain that it isn't 10 ms. However, if you configure some of the units
 				  //using one of the talon functions,  the units are RPM and Rotations
 				  break;
-			  case ControlMode::Position:
+			  case ctre::phoenix::motorcontrol::ControlMode::Position:
 				  command = command/2./M_PI*nativeU;
 				  break;
 		  }
@@ -437,39 +439,41 @@ void FRCRobotHWInterface::enforceLimits(ros::Duration &period)
 // an unknown mode is hit.
 bool FRCRobotHWInterface::convertControlMode(
 		const hardware_interface::TalonMode input_mode, 
-		ControlMode &output_mode)
+		ctre::phoenix::motorcontrol::ControlMode &output_mode)
 {
 	switch (input_mode)
 	{
 		case hardware_interface::TalonMode_PercentOutput:
-			output_mode = ControlMode::PercentOutput;
+			output_mode = ctre::phoenix::motorcontrol::ControlMode::PercentOutput;
 			break;
 		case hardware_interface::TalonMode_Position:      // CloseLoop
-			output_mode = ControlMode::Position;
+			output_mode = ctre::phoenix::motorcontrol::ControlMode::Position;
 			break;
 		case hardware_interface::TalonMode_Velocity:      // CloseLoop
-			output_mode = ControlMode::Velocity;
+			output_mode = ctre::phoenix::motorcontrol::ControlMode::Velocity;
 			break;
 		case hardware_interface::TalonMode_Current:       // CloseLoop
-			output_mode = ControlMode::Current;
+			output_mode = ctre::phoenix::motorcontrol::ControlMode::Current;
 			break;
 		case hardware_interface::TalonMode_Follower:
-			output_mode = ControlMode::Follower;
+			output_mode = ctre::phoenix::motorcontrol::ControlMode::Follower;
 			break;
 		case hardware_interface::TalonMode_MotionProfile:
-			output_mode = ControlMode::MotionProfile;
+			output_mode = ctre::phoenix::motorcontrol::ControlMode::MotionProfile;
 			break;
 		case hardware_interface::TalonMode_MotionMagic:
-			output_mode = ControlMode::MotionMagic;
+			output_mode = ctre::phoenix::motorcontrol::ControlMode::MotionMagic;
 			break;
 		case hardware_interface::TalonMode_TimedPercentOutput:
-			output_mode = ControlMode::TimedPercentOutput;
+			//output_mode = ctre::phoenix::motorcontrol::ControlMode::TimedPercentOutput;
+			output_mode = ctre::phoenix::motorcontrol::ControlMode::Disabled;
+			ROS_WARN("TimedPercentOutput mode seen in HW interface");
 			break;
 		case hardware_interface::TalonMode_Disabled:
-			output_mode = ControlMode::Disabled;
+			output_mode = ctre::phoenix::motorcontrol::ControlMode::Disabled;
 			break;
 		default:
-			output_mode = ControlMode::Disabled;
+			output_mode = ctre::phoenix::motorcontrol::ControlMode::Disabled;
 			ROS_WARN("Unknown mode seen in HW interface");
 			return false;
 	}
@@ -479,21 +483,21 @@ bool FRCRobotHWInterface::convertControlMode(
 
 bool FRCRobotHWInterface::convertNeutralMode(
 		const hardware_interface::NeutralMode input_mode, 
-		NeutralMode &output_mode)
+		ctre::phoenix::motorcontrol::NeutralMode &output_mode)
 {
 	switch (input_mode)
 	{
 		case hardware_interface::NeutralMode_EEPROM_Setting:
-			output_mode = EEPROMSetting;
+			output_mode = ctre::phoenix::motorcontrol::EEPROMSetting;
 			break;
 		case hardware_interface::NeutralMode_Coast:
-			output_mode = Coast;
+			output_mode = ctre::phoenix::motorcontrol::Coast;
 			break;
 		case hardware_interface::NeutralMode_Brake:
-			output_mode = Brake;
+			output_mode = ctre::phoenix::motorcontrol::Brake;
 			break;
 		default:
-			output_mode = EEPROMSetting;
+			output_mode = ctre::phoenix::motorcontrol::EEPROMSetting;
 			ROS_WARN("Unknown neutral mode seen in HW interface");
 			return false;
 	}
