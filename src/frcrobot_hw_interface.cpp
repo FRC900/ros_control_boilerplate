@@ -204,18 +204,15 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 	  talon_state_[joint_id].setOutputCurrent(output_current);
 
 	  // Scale this from native units 
-	  int closed_loop_error;
-	  can_talons_[joint_id]->GetClosedLoopError(closed_loop_error);
+	  int closed_loop_error = can_talons_[joint_id]->GetClosedLoopError(pidIdx);
 	  talon_state_[joint_id].setClosedLoopError(closed_loop_error);
-  ROS_INFO_STREAM_THROTTLE(1, std::endl << "ClosedLoopError:" << closed_loop_error);
+	  ROS_INFO_STREAM_THROTTLE(1, std::endl << "ClosedLoopError:" << closed_loop_error);
 	  
 
-	  double integral_accumulator;
-	  can_talons_[joint_id]->GetIntegralAccumulator(integral_accumulator);
+	  double integral_accumulator = can_talons_[joint_id]->GetIntegralAccumulator(pidIdx);
 	  talon_state_[joint_id].setIntegralAccumulator(integral_accumulator);
 
-	  double error_derivative;
-	  can_talons_[joint_id]->GetErrorDerivative(error_derivative);
+	  double error_derivative = can_talons_[joint_id]->GetErrorDerivative(pidIdx);
 	  talon_state_[joint_id].setErrorDerivative(error_derivative);
 
 	  // TODO :: Fix me

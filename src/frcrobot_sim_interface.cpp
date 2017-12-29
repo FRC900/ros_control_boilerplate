@@ -96,7 +96,7 @@ void FRCRobotSimInterface::read(ros::Duration &/*elapsed_time*/)
 	// Simulated state is updated in write, so just
 	// display it here for debugging
 
-	printState();
+	//printState();
 }
 
 void FRCRobotSimInterface::write(ros::Duration &elapsed_time)
@@ -105,9 +105,9 @@ void FRCRobotSimInterface::write(ros::Duration &elapsed_time)
 	// Maybe do a eStop / enabled check instead?
 	//enforceLimits(elapsed_time);
 
-	ROS_INFO_STREAM_THROTTLE(1, 
-			std::endl << std::string(__FILE__) << ":" << __LINE__ << 
-			std::endl << "Command" << std::endl << printCommandHelper());
+	//ROS_INFO_STREAM_THROTTLE(1, 
+			//std::endl << std::string(__FILE__) << ":" << __LINE__ << 
+			//std::endl << "Command" << std::endl << printCommandHelper());
 
 	for (std::size_t joint_id = 0; joint_id < num_can_talon_srxs_; ++joint_id)
 	{
