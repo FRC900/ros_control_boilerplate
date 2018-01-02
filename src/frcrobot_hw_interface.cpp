@@ -363,7 +363,6 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 
 	  }
 
-
 	  // Set new motor setpoint if either the mode or
 	  // the setpoint has been changed 
 	  double command;
@@ -393,11 +392,6 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
   {
 	  nidec_brushlesses_[i]->Set(brushless_command_[i]);
   }
-  // END DUMMY CODE
-  //
-  // ----------------------------------------------------
-  // ----------------------------------------------------
-  // ----------------------------------------------------
 }
 
 void FRCRobotHWInterface::enforceLimits(ros::Duration &period)
