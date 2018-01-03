@@ -19,6 +19,16 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   rosparam_shortcuts
   talon_interface
+  message_generation
+)
+
+add_message_files (
+  FILES
+  JoystickState.msg
+)
+generate_messages(
+  DEPENDENCIES
+  std_msgs
 )
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
@@ -44,9 +54,8 @@ catkin_package(
     std_msgs
     sensor_msgs
     rosparam_shortcuts
+	message_runtime
   LIBRARIES
-    generic_hw_control_loop
-    frc_robot_interface
 )
 
 ###########
@@ -131,6 +140,14 @@ if (DEFINED CMAKE_TOOLCHAIN_FILE)
 		${CTRE_LIBS}
 	)
 
+## Add cmake target dependencies of the executable
+## same as for the library above. This is needed to force
+## talon controller messages to be built before the
+## talon controller code tries to use them
+add_dependencies(frcrobot_hw_main
+  ${${PROJECT_NAME}_EXPORTED_TARGETS}
+  ${catkin_EXPORTED_TARGETS}
+)
     ## Install ------------------------------------------------------------
 
     # Install executables
@@ -181,6 +198,8 @@ set_target_properties(${PROJECT_NAME}_keyboard_teleop PROPERTIES OUTPUT_NAME key
 target_link_libraries(${PROJECT_NAME}_keyboard_teleop
   ${catkin_LIBRARIES}
 )
+
+
 
 ## Install ------------------------------------------------------------
 install(TARGETS
