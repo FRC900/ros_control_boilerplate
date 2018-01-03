@@ -44,7 +44,7 @@
 #include <ctre/phoenix/MotorControl/CAN/TalonSRX.h>
 #include <IterativeRobot.h>
 #include <DriverStation.h>
-
+#include <realtime_tools/realtime_publisher.h>
 #include <NidecBrushless.h>
 
 namespace frcrobot_control

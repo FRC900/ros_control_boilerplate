@@ -54,6 +54,7 @@
 
 namespace ros_control_boilerplate
 {
+#if 0
 struct ButtonState
 {
 	bool button;
@@ -86,6 +87,7 @@ struct JoystickState
 	//consider compiling all of button stuff to a single struct that is a sub-struct fo this struct
 	// Add buttons, triggers, bumpers, etc
 };
+#endif
 
 /// \brief Hardware interface for a robot
 class FRCRobotInterface : public hardware_interface::RobotHW
@@ -205,7 +207,7 @@ protected:
   std::vector<hardware_interface::TalonHWState> talon_state_;
   //std::vector<hardware_interface::JoystickHWState> joydstick_state_;
   double match_time_state_;
-  std::vector<JoystickState> joystick_state_;
+  //std::vector<JoystickState> joystick_state_;
   std::vector<double> brushless_pos_;
   std::vector<double> brushless_vel_;
   std::vector<double> brushless_eff_;
