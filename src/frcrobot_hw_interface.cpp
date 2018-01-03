@@ -228,6 +228,56 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
   }
 }
 
+//get rid of magic numbers
+float FRCRobotHWInterface::convertPosition(FeedbackDevice encoder_feedback, int joint_id) //convert to radians //how to include talon_mode?
+{
+	float sensor_position = can_talons_[joint_id]->GetSelectedSensorPosition();
+	switch(encoder_feedback)
+	{
+		case FeedbackDevice_QuadEncoder:
+		case FeedbackDevice_PulseWidthEncodedPosition:
+			return sensor_position * 2*M_PI/4056; //4056 = 4* encoder cycles per revolution
+		case FeedbackDevice_Analog: //depends on the encoder voltage //this actually seems like it outputs voltage? //wraps around after 1023
+			return (sensor_position - 1024*floor(sensor_position/1024)) * 2*M_PI; //also this gives percent of full voltage instead of position?
+		case FeedbackDevice_Tachometer:
+		case FeedbackDevice_SensorSum:
+		case FeedbackDevice_SensorDifference:
+		case FeedbackDevice_Inertial:
+		case FeedbackDevice_RemoteSensor:
+		case FeedbackDevice_SoftwareEmulatedSensor:
+			ROS_WARN_STREAM("Unable to convert units. Native units returned.");
+			return sensor_position;
+		default:
+			ROS_WARN_STREAM("Invalid encoder feedback device. Native units returned.");
+			return sensor_position;
+	}
+}
+
+float FRCRobotHWInterface::convertVelocity(FeedbackDevice encoder_feedback, int joint_id) //convert to radians/sec from native units/.1sec
+{
+	float sensor_velocity = can_talons_[joint_id]->GetSelectedSensorVelocity();
+	switch(encoder_feedback)
+	{
+		case FeedbackDevice_QuadEncoder:
+		case FeedbackDevice_PulseWidthEncodedPosition:
+			return sensor_velocity * 2*M_PI/4056/.1; //4056 = 4* encoder cycles per revolution
+		case FeedbackDevice_Analog: //depends on the encoder voltage //this actually seems like it outputs voltage? //wraps around after 1023
+			return (sensor_velocity - 1024*floor(sensor_velocity/1024)) * 2*M_PI/.1;
+		case FeedbackDevice_Tachometer:
+		case FeedbackDevice_SensorSum:
+		case FeedbackDevice_SensorDifference:
+		case FeedbackDevice_Inertial:
+		case FeedbackDevice_RemoteSensor:
+		case FeedbackDevice_SoftwareEmulatedSensor:
+			ROS_WARN_STREAM("Unable to convert units. Native units returned.");
+			return sensor_velocity;
+		default:
+			ROS_WARN_STREAM("Invalid encoder feedback device. Native units returned.");
+			return sensor_velocity;
+	}
+}
+
+
 void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 {
   // Safety - should be using Talon HW to control this

@@ -120,6 +120,22 @@ private:
 class FRCRobotHWInterface : public ros_control_boilerplate::FRCRobotInterface
 {
 public:
+  enum FeedbackDevice
+	{
+		FeedbackDevice_Uninitialized,
+		FeedbackDevice_QuadEncoder,
+		FeedbackDevice_Analog,
+		FeedbackDevice_Tachometer,
+		FeedbackDevice_PulseWidthEncodedPosition,
+		FeedbackDevice_SensorSum,
+		FeedbackDevice_SensorDifference,
+		FeedbackDevice_Inertial,
+		FeedbackDevice_RemoteSensor,
+		FeedbackDevice_SoftwareEmulatedSensor, 
+		FeedbackDevice_CTRE_MagEncoder_Absolute = FeedbackDevice_PulseWidthEncodedPosition,
+		FeedbackDevice_CTRE_MagEncoder_Relative = FeedbackDevice_QuadEncoder,
+		FeedbackDevice_Last
+	};
   /**
    * \brief Constructor
    * \param nh - Node handle for topics.
@@ -132,6 +148,9 @@ public:
 
   /** \brief Read the state from the robot hardware. */
   virtual void read(ros::Duration &elapsed_time);
+
+  virtual float convertPosition(FeedbackDevice encoder_feedback, int joint_id);
+  virtual float convertVelocity(FeedbackDevice encoder_feedback, int joint_id);
 
   /** \brief Write the command to the robot hardware. */
   virtual void write(ros::Duration &elapsed_time);
