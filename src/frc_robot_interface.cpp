@@ -164,8 +164,8 @@ void FRCRobotInterface::init()
 
 		// Do the same for a command interface for
 		// the same talon
-		hardware_interface::TalonCommandHandle talon_command_handle(tsh, &talon_command_[i]);
-		talon_command_interface_.registerHandle(talon_command_handle);
+		hardware_interface::TalonCommandHandle tch(tsh, &talon_command_[i]);
+		talon_command_interface_.registerHandle(tch);
 	}
 
 	// Set vectors to correct size to hold data

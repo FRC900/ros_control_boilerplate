@@ -242,8 +242,8 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 	  // mode, encoder choice and maybe a user-configurable ticks/rotation
 	  // setting and converts from native units to radians (for position)
 	  // and radians/src (for velocity)
-	  talon_state_[joint_id].setPosition(can_talons_[joint_id]->GetSelectedSensorPosition()/4096*2*M_PI);
-	  talon_state_[joint_id].setSpeed(can_talons_[joint_id]->GetSelectedSensorVelocity()/4096*2*M_PI/.1);
+	  talon_state_[joint_id].setPosition(can_talons_[joint_id]->GetSelectedSensorPosition()/4096.*2*M_PI);
+	  talon_state_[joint_id].setSpeed(can_talons_[joint_id]->GetSelectedSensorVelocity()/4096.*2*M_PI/.1);
 
 	  float bus_voltage;
 	  can_talons_[joint_id]->GetBusVoltage(bus_voltage);
@@ -370,6 +370,54 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 	  }
 
 
+	  float closed_loop_ramp;
+	  float open_loop_ramp;
+	  float peak_output_forward;
+	  float peak_output_reverse;
+	  float nominal_output_forward;
+	  float nominal_output_reverse;
+	  float neutral_deadband;
+	  if (talon_command_[joint_id].outputShapingChanged(closed_loop_ramp,
+														open_loop_ramp,
+														peak_output_forward,
+														peak_output_reverse,
+														nominal_output_forward,
+														nominal_output_reverse,
+														neutral_deadband))
+	  {
+		  can_talons_[joint_id]->ConfigOpenloopRamp(open_loop_ramp, 0);
+		  can_talons_[joint_id]->ConfigClosedloopRamp(closed_loop_ramp, 0);
+		  can_talons_[joint_id]->ConfigPeakOutputForward(peak_output_forward, 0);
+		  can_talons_[joint_id]->ConfigPeakOutputReverse(peak_output_reverse, 0);
+		  can_talons_[joint_id]->ConfigNominalOutputForward(nominal_output_forward, 0);
+		  can_talons_[joint_id]->ConfigNominalOutputReverse(nominal_output_reverse, 0);
+		  can_talons_[joint_id]->ConfigNeutralDeadband(neutral_deadband, 0);
+
+		  talon_state_[joint_id].setOpenloopRamp(open_loop_ramp);
+		  talon_state_[joint_id].setClosedloopRamp(closed_loop_ramp);
+		  talon_state_[joint_id].setPeakOutputForward(peak_output_forward);
+		  talon_state_[joint_id].setPeakOutputReverse(peak_output_reverse);
+		  talon_state_[joint_id].setNominalOutputForward(nominal_output_forward);
+		  talon_state_[joint_id].setNominalOutputReverse(nominal_output_reverse);
+	  }
+	  float v_c_saturation;
+	  int v_measurement_filter;
+	  bool v_c_enable;
+	  if (talon_command_[joint_id].VoltageCompensationChanged(v_c_saturation,
+															  v_measurement_filter,
+															  v_c_enable))
+	  {
+		  can_talons_[joint_id]->ConfigVoltageCompSaturation(v_c_saturation, 0);
+		  can_talons_[joint_id]->ConfigVoltageMeasurementFilter(v_measurement_filter, 0);
+		  can_talons_[joint_id]->EnableVoltageCompensation(v_c_enable);
+
+		  talon_state_[joint_id].setVoltageCompensationSaturation(v_c_saturation);
+		  talon_state_[joint_id].setVoltageMeasurementFilter(v_measurement_filter);
+		  talon_state_[joint_id].setVoltageCompensationEnable(v_c_enable);
+
+	  }
+
+
 	  // Set new motor setpoint if either the mode or
 	  // the setpoint has been changed 
 	  float command;
@@ -381,12 +429,12 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 	  {
 		  switch (out_mode) {
 			  case ControlMode::Velocity:
-				  command = command/2/M_PI*nativeU*.1; //assumes input value is velocity per 100ms there is a chance it is supposed to be 10ms
+				  command = command/2./M_PI*nativeU*.1; //assumes input value is velocity per 100ms there is a chance it is supposed to be 10ms
 				  //RG: I am almost certain that it isn't 10 ms. However, if you configure some of the units
 				  //using one of the talon functions,  the units are RPM and Rotations
 				  break;
 			  case ControlMode::Position:
-				  command = command/2/M_PI*nativeU;
+				  command = command/2./M_PI*nativeU;
 				  break;
 		  }
 		  can_talons_[joint_id]->Set(out_mode, command);
