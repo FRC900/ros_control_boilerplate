@@ -72,6 +72,7 @@ void FRCRobotHWInterface::hal_keepalive_thread(void) {
 	// Just throw a basic IterativeRobot in here instead?
 	run_hal_thread_ = true;
 	Joystick joystick(0);
+    realtime_tools::RealtimePublisher<joystick_state_controller::JoystickState>realtime_pub(nh_, "joystick_states", 4);
 	while (run_hal_thread_) {
 		robot_.OneIteration();
 		// Things to keep track of
@@ -87,6 +88,7 @@ void FRCRobotHWInterface::hal_keepalive_thread(void) {
 		//    files.
 		
 		//TODO: match gets with correct labels
+        /*
 		joystick_state_[0].leftStickX  = joystick.GetRawAxis(0);
 		joystick_state_[0].leftStickY  = joystick.GetRawAxis(1);
 		joystick_state_[0].rightStickX = joystick.GetRawAxis(4);
@@ -133,7 +135,62 @@ void FRCRobotHWInterface::hal_keepalive_thread(void) {
 		joystick_state_[0].stickRight.button     = joystick.GetRawButton(10);
 		joystick_state_[0].stickRight.press   	 = joystick.GetRawButtonPressed(10);
 		joystick_state_[0].stickRight.release 	 = joystick.GetRawButtonReleased(10);
-		
+	
+        */
+
+        if(realtime_pub_->trylock()) {
+            realtime_pub_->msg_.header.stamp = time;
+
+            realtime_pub_->msg_.leftStickX = joystick.GetRawAxis(0);
+            realtime_pub_->msg_.leftStickY = joystick.GetRawAxis(1);
+            realtime_pub_->msg_.rightStickX = joystick.GetRawAxis(4);
+            realtime_pub_->msg_.rightStickY = joystick.GetRawAxis(5);
+
+            realtime_pub_->msg_.leftTrigger = joystick.GetRawAxis(2);
+            realtime_pub_->msg_.rightTrigger = joystick.GetRawAxis(3);
+
+            realtime_pub_->msg_.buttonAButton = joystick.GetRawButton(1);
+            realtime_pub_->msg_.buttonAPress = joystick.GetRawButtonPressed(1);
+            realtime_pub_->msg_.buttonARelease = joystick.GetRawButtonReleased(1);
+
+            realtime_pub_->msg_.buttonBButton = joystick.GetRawButton(2);
+            realtime_pub_->msg_.buttonBPress = joystick.GetRawButtonPressed(2);
+            realtime_pub_->msg_.buttonBRelease = joystick.GetRawButtonReleased(2);
+
+            realtime_pub_->msg_.buttonXButton = joystick.GetRawButton(3);
+            realtime_pub_->msg_.buttonXPress = joystick.GetRawButtonPressed(3);
+            realtime_pub_->msg_.buttonXRelease = joystick.GetRawButtonReleased(3);
+
+            realtime_pub_->msg_.buatonYButton = joystick.GetRawButton(4);
+            realtime_pub_->msg_.buttonYPress = joystick.GetRawButtonPressed(4);
+            realtime_pub_->msg_.buttonYRelease = joystick.GetRawButtonReleased(4);
+
+            realtime_pub_->msg_.bumperLeftButton = joystick.GetRawButton(5);
+            realtime_pub_->msg_.bumperLeftPress = joystick.GetRawButtonPressed(5);
+            realtime_pub_->msg_.bumperLeftRelease = joystick.GetRawButtonReleased(5);
+
+            realtime_pub_->msg_.bumperRightButton = joystick.GetRawButton(6);
+            realtime_pub_->msg_.bumperRightPress = joystick.GetRawButtonPressed(6);
+            realtime_pub_->msg_.bumperRightRelease = joystick.GetRawButtonReleased(6);
+
+            realtime_pub_->msg_.buttonBackButton = joystick.GetRawButton(7);
+            realtime_pub_->msg_.buttonBackPress = joystick.GetRawButtonPressed(7);
+            realtime_pub_->msg_.buttonBackRelease = joystick.GetRawButtonReleased(7);
+
+            realtime_pub_->msg_.buttonStartButton = joystick.GetRawButton(8);
+            realtime_pub_->msg_.buttonStartPress = joystick.GetRawButtonPressed(8);
+            realtime_pub_->msg_.buttonStartRelease = joystick.GetRawButtonReleased(8);
+
+            realtime_pub_->msg_.stickLeftButton = joystick.GetRawButton(9);
+            realtime_pub_->msg_.stickLeftPress = joystick.GetRawButtonPressed(9);
+            realtime_pub_->msg_.stickLeftRelease = joystick.GetRawButtonReleased(9);
+
+            realtime_pub_->msg_.stickRightButton = joystick.GetRawButton(10);
+            realtime_pub_->msg_.stickRightPress = joystick.GetRawButtonPressed(10);
+            realtime_pub_->msg_.stickRightRelease = joystick.GetRawButtonReleased(10);
+            
+            realtime_pub_->unlockAndPublish();
+        }
 		//TODO: Add direction buttons
 		// Could do most of these via dummy joint handles. Since
 		// they read-only, create bogus state handles for them
