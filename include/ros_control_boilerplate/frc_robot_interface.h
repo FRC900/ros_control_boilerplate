@@ -194,6 +194,7 @@ protected:
   std::vector<std::string> nidec_brushless_names_;
   std::vector<int>         nidec_brushless_pwm_channels_;
   std::vector<int>         nidec_brushless_dio_channels_;
+  std::vector<bool>        nidec_brushless_inverts_;
   std::size_t              num_nidec_brushlesses_;
 
   urdf::Model *urdf_model_;

@@ -228,6 +228,7 @@ void FRCRobotHWInterface::init(void)
 	for (size_t i = 0; i < num_nidec_brushlesses_; i++)
 	{
 		nidec_brushlesses_.push_back(std::make_shared<frc::NidecBrushless>(nidec_brushless_pwm_channels_[i], nidec_brushless_dio_channels_[i]));
+		nidec_brushlesses_[i]->SetInverted(nidec_brushless_inverts_[i]);
 	}
 	ROS_INFO_NAMED("frcrobot_hw_interface", "FRCRobotHWInterface Ready.");
 }
