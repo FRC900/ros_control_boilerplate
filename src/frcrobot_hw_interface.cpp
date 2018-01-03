@@ -421,7 +421,22 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 		  talon_state_[joint_id].setVoltageCompensationSaturation(v_c_saturation);
 		  talon_state_[joint_id].setVoltageMeasurementFilter(v_measurement_filter);
 		  talon_state_[joint_id].setVoltageCompensationEnable(v_c_enable);
+	  }
+	  int peak_amps;
+	  int peak_msec;
+	  int continuous_amps;
+	  bool enable;
+	  if (talon_command_[joint_id].currentLimtChanged(peak_amps, peak_msec, continuous_amps, enable))
+	  {
+		  can_talons_[joint_id]->ConfigPeakCurrentLimit(peak_amps, timeoutMs);
+		  can_talons_[joint_id]->ConfigPeakCurrentDuration(peak_msec, timeoutMs);
+		  can_talons_[joint_id]->ConfigContinuousCurrentLimit(continuous_amps, timeoutMs);
+		  can_talons_[joint_id]->EnableCurrentLimit(enable, timeoutMs);
 
+		  talon_state_[joint_id].setPeakCurrentLimit(peak_amps);
+		  talon_state_[joint_id].setPeakCurrentDuration(peak_msec);
+		  talon_state_[joint_id].setContinuousCurrentLimit(continuous_amps);
+		  talon_state_[joint_id].setCurrentLimitEnable(enable);
 	  }
 
 	  // Set new motor setpoint if either the mode or
