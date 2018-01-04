@@ -276,6 +276,17 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 	  double error_derivative = can_talons_[joint_id]->GetErrorDerivative(pidIdx) / scale;
 	  talon_state_[joint_id].setErrorDerivative(error_derivative);
 
+	  // TODO : scale me?
+	  double closed_loop_target = can_talons_[joint_id]->GetClosedLoopTarget(pidIdx);
+	  talon_state_[joint_id].setClosedLoopTarget(closed_loop_target);
+
+	  double active_trajectory_position = can_talons_[joint_id]->GetActiveTrajectoryPosition();
+	  talon_state_[joint_id].setActiveTrajectoryPosition(active_trajectory_position);
+	  double active_trajectory_velocity = can_talons_[joint_id]->GetActiveTrajectoryVelocity();
+	  talon_state_[joint_id].setActiveTrajectoryVelocity(active_trajectory_velocity);
+	  double active_trajectory_heading = can_talons_[joint_id]->GetActiveTrajectoryHeading();
+	  talon_state_[joint_id].setActiveTrajectoryHeading(active_trajectory_heading);
+
 	  // TODO :: Fix me
 	  //talon_state_[joint_id].setFwdLimitSwitch(can_talons_[joint_id]->IsFwdLimitSwitchClosed());
 	  //talon_state_[joint_id].setRevLimitSwitch(can_talons_[joint_id]->IsRevLimitSwitchClosed());
