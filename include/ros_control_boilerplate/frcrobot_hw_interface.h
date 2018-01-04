@@ -149,8 +149,8 @@ public:
   /** \brief Read the state from the robot hardware. */
   virtual void read(ros::Duration &elapsed_time);
 
-  virtual float convertPosition(FeedbackDevice encoder_feedback, int joint_id);
-  virtual float convertVelocity(FeedbackDevice encoder_feedback, int joint_id);
+  virtual double convertPosition(FeedbackDevice encoder_feedback, int joint_id);
+  virtual double convertVelocity(FeedbackDevice encoder_feedback, int joint_id);
 
   /** \brief Write the command to the robot hardware. */
   virtual void write(ros::Duration &elapsed_time);

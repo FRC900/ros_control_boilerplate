@@ -291,9 +291,9 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 }
 
 //get rid of magic numbers
-float FRCRobotHWInterface::convertPosition(FeedbackDevice encoder_feedback, int joint_id) //convert to radians //how to include talon_mode?
+double FRCRobotHWInterface::convertPosition(FeedbackDevice encoder_feedback, int joint_id) //convert to radians //how to include talon_mode?
 {
-	float sensor_position = can_talons_[joint_id]->GetSelectedSensorPosition();
+	double sensor_position = can_talons_[joint_id]->GetSelectedSensorPosition(pidIdx);
 	switch(encoder_feedback)
 	{
 		case FeedbackDevice_QuadEncoder:
@@ -315,9 +315,9 @@ float FRCRobotHWInterface::convertPosition(FeedbackDevice encoder_feedback, int 
 	}
 }
 
-float FRCRobotHWInterface::convertVelocity(FeedbackDevice encoder_feedback, int joint_id) //convert to radians/sec from native units/.1sec
+double FRCRobotHWInterface::convertVelocity(FeedbackDevice encoder_feedback, int joint_id) //convert to radians/sec from native units/.1sec
 {
-	float sensor_velocity = can_talons_[joint_id]->GetSelectedSensorVelocity();
+	double sensor_velocity = can_talons_[joint_id]->GetSelectedSensorVelocity(pidIdx);
 	switch(encoder_feedback)
 	{
 		case FeedbackDevice_QuadEncoder:
@@ -476,12 +476,12 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 	  int peak_msec;
 	  int continuous_amps;
 	  bool enable;
-	  if (talon_command_[joint_id].currentLimtChanged(peak_amps, peak_msec, continuous_amps, enable))
+	  if (talon_command_[joint_id].currentLimitChanged(peak_amps, peak_msec, continuous_amps, enable))
 	  {
 		  can_talons_[joint_id]->ConfigPeakCurrentLimit(peak_amps, timeoutMs);
 		  can_talons_[joint_id]->ConfigPeakCurrentDuration(peak_msec, timeoutMs);
 		  can_talons_[joint_id]->ConfigContinuousCurrentLimit(continuous_amps, timeoutMs);
-		  can_talons_[joint_id]->EnableCurrentLimit(enable, timeoutMs);
+		  can_talons_[joint_id]->EnableCurrentLimit(enable);
 
 		  talon_state_[joint_id].setPeakCurrentLimit(peak_amps);
 		  talon_state_[joint_id].setPeakCurrentDuration(peak_msec);
