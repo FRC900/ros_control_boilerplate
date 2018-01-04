@@ -197,6 +197,25 @@ protected:
   std::vector<bool>        nidec_brushless_inverts_;
   std::size_t              num_nidec_brushlesses_;
 
+  //I think inverts are worth having on below 3
+  std::vector<std::string> digital_input_names_;
+  std::vector<int>         digital_input_dio_channels_;
+  std::vector<bool>        digital_input_inverts_;
+  std::size_t              num_digital_inputs_;
+  
+
+  std::vector<std::string> digital_output_names_;
+  std::vector<int>         digital_output_dio_channels_;
+  std::vector<bool>        digital_output_inverts_;
+  std::size_t              num_digital_outputs_;
+  
+
+  std::vector<std::string> pwm_names_;
+  std::vector<int>         pwm_pwm_channels_;
+  std::vector<bool>        pwm_inverts_;
+  std::size_t              num_pwm_;
+
+  
   urdf::Model *urdf_model_;
 
   // Modes
@@ -213,11 +232,16 @@ protected:
   std::vector<double> brushless_vel_;
   std::vector<double> brushless_eff_;
 
+  std::vector<double> digital_input_state_;
+  std::vector<double> digital_output_state_; //No actual data
+  std::vector<double> pwm_state_; //No actual data
+
   // Same as above, but for pending commands to be
   // written to the hardware
   std::vector<hardware_interface::TalonHWCommand> talon_command_;
   std::vector<double> brushless_command_;
-
+  std::vector<double> digital_output_command_;
+  std::vector<double> pwm_command_;
   // Copy of limits, in case we need them later in our control stack
   std::vector<double> joint_position_lower_limits_;
   std::vector<double> joint_position_upper_limits_;

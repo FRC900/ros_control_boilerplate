@@ -230,6 +230,21 @@ void FRCRobotHWInterface::init(void)
 		nidec_brushlesses_.push_back(std::make_shared<frc::NidecBrushless>(nidec_brushless_pwm_channels_[i], nidec_brushless_dio_channels_[i]));
 		nidec_brushlesses_[i]->SetInverted(nidec_brushless_inverts_[i]);
 	}
+	for (size_t i = 0; i < num_digital_inputs_; i++)
+	{
+		digital_inputs_.push_back(std::make_shared<frc::DigitalInput>(digital_input_dio_channels_[i]));
+	}
+	for (size_t i = 0; i < num_digital_outputs_; i++)
+	{
+		digital_outputs_.push_back(std::make_shared<frc::DigitalOutput>(digital_output_dio_channels_[i]));
+	}
+	for (size_t i = 0; i < num_pwm_; i++)
+	{
+		PWMs_.push_back(std::make_shared<frc::SafePWM>(pwm_pwm_channels_[i]));
+		PWMs_[i]->SetSafetyEnabled(false);
+	}
+	
+
 	ROS_INFO_NAMED("frcrobot_hw_interface", "FRCRobotHWInterface Ready.");
 }
 
@@ -288,6 +303,24 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 	  brushless_vel_[i] = 
 	  brushless_eff_[i] = nidec_brushlesses_[i]->Get();
   }
+  for (size_t i = 0; i < num_digital_inputs_; i++)
+  {
+	  digital_input_state_[i] = (digital_inputs_[i]->Get()^digital_input_inverts_[i]) ? 1 : 0;
+	  //State should really be a bool
+  }
+  for (size_t i = 0; i < num_digital_outputs_; i++)
+  {
+	  digital_output_state_[i] = (digital_outputs_[i]->Get()^digital_output_inverts_[i]) ? 1 : 0;
+	  //State should really be a bool
+	  //This isn't strictly neccesary, it just reads what the DIO is currently set to
+  } 
+  /*
+  for (size_t i = 0; i < num_pwm_; i++)
+  {
+  	//Nothing to read
+  }
+  */
+  
 }
 
 //get rid of magic numbers
@@ -518,6 +551,17 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
   {
 	  nidec_brushlesses_[i]->Set(brushless_command_[i]);
   }
+  for (size_t i = 0; i < num_digital_outputs_; i++)
+  {
+	bool converted_command = (digital_output_command_[i] > 0) ^ digital_output_inverts_[i];  
+	digital_outputs_[i]->Set(converted_command);
+  }
+  for (size_t i = 0; i < num_pwm_; i++)
+  {
+	int inverter  = (pwm_inverts_[i]) ? -1 : 1;   
+	PWMs_[i]->SetSpeed(pwm_command_[i]*inverter);
+  }
+  
 }
 
 void FRCRobotHWInterface::enforceLimits(ros::Duration &period)

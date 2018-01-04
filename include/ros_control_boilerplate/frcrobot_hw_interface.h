@@ -46,6 +46,9 @@
 #include <DriverStation.h>
 #include <realtime_tools/realtime_publisher.h>
 #include <NidecBrushless.h>
+#include <DigitalInput.h>
+#include <DigitalOutput.h>
+#include <SafePWM.h>
 
 namespace frcrobot_control
 {
@@ -169,6 +172,9 @@ private:
 
   std::vector<std::shared_ptr<ctre::phoenix::motorcontrol::can::TalonSRX>> can_talons_;
   std::vector<std::shared_ptr<frc::NidecBrushless>> nidec_brushlesses_;
+  std::vector<std::shared_ptr<frc::DigitalInput>> digital_inputs_;
+  std::vector<std::shared_ptr<frc::DigitalOutput>> digital_outputs_;
+  std::vector<std::shared_ptr<frc::SafePWM>> PWMs_;
 
   std::thread hal_thread_;
   bool        run_hal_thread_;

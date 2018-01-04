@@ -128,6 +128,81 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 		  nidec_brushless_dio_channels_.push_back(dio_channel);
 		  nidec_brushless_inverts_.push_back(invert);
 	  }
+	  else if (joint_type == "digital_input")
+	  {
+		  if (!joint_params.hasMember("dio_channel"))
+			  throw std::runtime_error("A Digital Input dio_channel was not specified");
+		  XmlRpc::XmlRpcValue& xml_digital_input_dio_channel = joint_params["dio_channel"];
+		  if (!xml_digital_input_dio_channel.valid() ||
+				  xml_digital_input_dio_channel.getType() != XmlRpc::XmlRpcValue::TypeInt)
+			  throw std::runtime_error("An invalid joint dio_channel was specified (expecting an int).");
+
+		  const int digital_input_dio_channel = xml_digital_input_dio_channel;
+
+		  bool invert = false;
+		  if (joint_params.hasMember("invert"))
+		  {
+			  XmlRpc::XmlRpcValue& xml_invert = joint_params["invert"];
+			  if (!xml_invert.valid() ||
+					  xml_invert.getType() != XmlRpc::XmlRpcValue::TypeBoolean)
+				  throw std::runtime_error("An invalid joint invert was specified (expecting a boolean).");
+			  invert = xml_invert;
+		  }
+
+		  digital_input_names_.push_back(joint_name);
+		  digital_input_dio_channels_.push_back(digital_input_dio_channel);
+		  digital_input_inverts_.push_back(invert);
+	  }
+	  else if (joint_type == "digital_output")
+	  {
+		  if (!joint_params.hasMember("dio_channel"))
+			  throw std::runtime_error("A Digital Output dio_channel was not specified");
+		  XmlRpc::XmlRpcValue& xml_digital_output_dio_channel = joint_params["dio_channel"];
+		  if (!xml_digital_output_dio_channel.valid() ||
+				  xml_digital_output_dio_channel.getType() != XmlRpc::XmlRpcValue::TypeInt)
+			  throw std::runtime_error("An invalid joint dio_channel was specified (expecting an int).");
+
+		  const int digital_output_dio_channel = xml_digital_output_dio_channel;
+
+		  bool invert = false;
+		  if (joint_params.hasMember("invert"))
+		  {
+			  XmlRpc::XmlRpcValue& xml_invert = joint_params["invert"];
+			  if (!xml_invert.valid() ||
+					  xml_invert.getType() != XmlRpc::XmlRpcValue::TypeBoolean)
+				  throw std::runtime_error("An invalid joint invert was specified (expecting a boolean).");
+			  invert = xml_invert;
+		  }
+
+		  digital_output_names_.push_back(joint_name);
+		  digital_output_dio_channels_.push_back(digital_output_dio_channel);
+		  digital_output_inverts_.push_back(invert);
+	  }
+	  else if (joint_type == "pwm")
+	  {
+		  if (!joint_params.hasMember("pwm_channel"))
+			  throw std::runtime_error("A PWM pwm_channel was not specified");
+		  XmlRpc::XmlRpcValue& xml_pwm_pwm_channel = joint_params["pwm_channel"];
+		  if (!xml_pwm_pwm_channel.valid() ||
+				  xml_pwm_pwm_channel.getType() != XmlRpc::XmlRpcValue::TypeInt)
+			  throw std::runtime_error("An invalid joint pwm_channel was specified (expecting an int).");
+
+		  const int pwm_pwm_channel = xml_pwm_pwm_channel;
+
+		  bool invert = false;
+		  if (joint_params.hasMember("invert"))
+		  {
+			  XmlRpc::XmlRpcValue& xml_invert = joint_params["invert"];
+			  if (!xml_invert.valid() ||
+					  xml_invert.getType() != XmlRpc::XmlRpcValue::TypeBoolean)
+				  throw std::runtime_error("An invalid joint invert was specified (expecting a boolean).");
+			  invert = xml_invert;
+		  }
+
+		  pwm_names_.push_back(joint_name);
+		  pwm_pwm_channels_.push_back(pwm_pwm_channel);
+		  pwm_inverts_.push_back(invert);
+	  }
 	  else
 	  {
 		  std::stringstream s;
@@ -143,6 +218,9 @@ void FRCRobotInterface::init()
 	// Create vectors of the correct size for
 	// talon HW state and commands
 	talon_command_.resize(num_can_talon_srxs_);
+
+	
+
 
 	// Loop through the list of joint names
 	// specified as params for the hardware_interface.
@@ -201,7 +279,55 @@ void FRCRobotInterface::init()
 		joint_velocity_interface_.registerHandle(jh);
 	}
 
+		
+	num_digital_inputs_ = digital_input_names_.size();
+	digital_input_state_.resize(num_digital_inputs_);
+	for (size_t i = 0; i < num_digital_inputs_; i++)
+	{
+		ROS_INFO_STREAM_NAMED(name_, "FRCRobotHWInterface: Registering interface for : " << digital_input_names_[i] << " at DIO channel " << digital_input_dio_channels_[i] << " / invert " << digital_input_inverts_[i]);
+		// Create state interface for the given digital input
+		// and point it to the data stored in the
+		// corresponding brushless_state array entry
+		hardware_interface::JointStateHandle dish(digital_input_names_[i], &digital_input_state_[i], &digital_input_state_[i], &digital_input_state_[i]);
+		joint_state_interface_.registerHandle(dish);
+
+	}
+
 	
+	num_digital_outputs_ = digital_output_names_.size();
+	digital_output_state_.resize(num_digital_outputs_);
+	digital_output_command_.resize(num_digital_outputs_);
+	for (size_t i = 0; i < num_digital_outputs_; i++)
+	{
+		ROS_INFO_STREAM_NAMED(name_, "FRCRobotHWInterface: Registering interface for : " << digital_output_names_[i] << " at DIO channel " << digital_output_dio_channels_[i] << " / invert " << digital_output_inverts_[i]);
+			
+		hardware_interface::JointStateHandle dosh(digital_output_names_[i], &digital_output_state_[i], &digital_output_state_[i], &digital_output_state_[i]);
+		joint_state_interface_.registerHandle(dosh);
+		
+		// Do the same for a command interface for
+		// the digital output
+		hardware_interface::JointHandle doh(dosh, &digital_output_command_[i]);
+		joint_velocity_interface_.registerHandle(doh);
+	}
+
+
+	num_pwm_ = pwm_names_.size();
+	pwm_state_.resize(num_pwm_);
+	pwm_command_.resize(num_pwm_);
+	for (size_t i = 0; i < num_pwm_; i++)
+	{
+		ROS_INFO_STREAM_NAMED(name_, "FRCRobotHWInterface: Registering interface for : " << pwm_names_[i] << " at PWM channel " << pwm_pwm_channels_[i] << " / invert " << pwm_inverts_[i]);
+
+		hardware_interface::JointStateHandle psh(pwm_names_[i], &pwm_state_[i], &pwm_state_[i], &pwm_state_[i]);
+		joint_state_interface_.registerHandle(psh);
+		
+		// Do the same for a command interface for
+		// the same brushless motor
+		hardware_interface::JointHandle ph(psh, &brushless_command_[i]);
+		joint_velocity_interface_.registerHandle(ph);
+	}
+
+
 	// Publish various FRC-specific data using generic joint state for now
 	// For simple things this might be OK, but for more complex state
 	// (e.g. joystick) it probably makes more sense to write a
