@@ -96,7 +96,7 @@ void FRCRobotSimInterface::read(ros::Duration &/*elapsed_time*/)
 	// Simulated state is updated in write, so just
 	// display it here for debugging
 
-	printState();
+	//printState();
 }
 
 void FRCRobotSimInterface::write(ros::Duration &elapsed_time)
@@ -105,9 +105,9 @@ void FRCRobotSimInterface::write(ros::Duration &elapsed_time)
 	// Maybe do a eStop / enabled check instead?
 	//enforceLimits(elapsed_time);
 
-	ROS_INFO_STREAM_THROTTLE(1, 
-			std::endl << std::string(__FILE__) << ":" << __LINE__ << 
-			std::endl << "Command" << std::endl << printCommandHelper());
+	//ROS_INFO_STREAM_THROTTLE(1, 
+			//std::endl << std::string(__FILE__) << ":" << __LINE__ << 
+			//std::endl << "Command" << std::endl << printCommandHelper());
 
 	for (std::size_t joint_id = 0; joint_id < num_can_talon_srxs_; ++joint_id)
 	{
@@ -123,13 +123,13 @@ void FRCRobotSimInterface::write(ros::Duration &elapsed_time)
 			talon_state_[joint_id].setSlot(slot);
 		}
 
-		float p;
-		float i;
-		float d;
-		float f;
+		double p;
+		double i;
+		double d;
+		double f;
 		int   iz;
 		int   allowable_closed_loop_error;
-		float max_integral_accumulator;
+		double max_integral_accumulator;
 		for (int j = 0; j < 2; j++) {
 			if(talon_command_[joint_id].pidfChanged(p, i, d, f, iz, allowable_closed_loop_error, max_integral_accumulator, j))
 			{
@@ -158,7 +158,7 @@ void FRCRobotSimInterface::write(ros::Duration &elapsed_time)
 			continue;
 		
 		// Assume instant acceleration for now
-		float speed;
+		double speed;
 
 		bool speed_changed = talon_command_[joint_id].get(speed);
 		if (invert)
@@ -172,7 +172,7 @@ void FRCRobotSimInterface::write(ros::Duration &elapsed_time)
 	for (std::size_t joint_id = 0; joint_id < num_nidec_brushlesses_; ++joint_id)
 	{
 		// Assume instant acceleration for now
-		const float vel = brushless_command_[joint_id];
+		const double vel = brushless_command_[joint_id];
 		brushless_pos_[joint_id] += vel * elapsed_time.toSec();
 		brushless_vel_[joint_id] = vel;
 	}

@@ -113,9 +113,20 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 			  throw std::runtime_error("An invalid joint dio_channel was specified (expecting an int).");
 		  const int dio_channel = xml_dio_channel;
 
+		  bool invert = false;
+		  if (joint_params.hasMember("invert"))
+		  {
+			  XmlRpc::XmlRpcValue& xml_invert = joint_params["invert"];
+			  if (!xml_invert.valid() ||
+					  xml_invert.getType() != XmlRpc::XmlRpcValue::TypeBoolean)
+				  throw std::runtime_error("An invalid joint invert was specified (expecting a boolean).");
+			  invert = xml_invert;
+		  }
+
 		  nidec_brushless_names_.push_back(joint_name);
 		  nidec_brushless_pwm_channels_.push_back(pwm_channel);
 		  nidec_brushless_dio_channels_.push_back(dio_channel);
+		  nidec_brushless_inverts_.push_back(invert);
 	  }
 	  else
 	  {
@@ -123,7 +134,6 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 		  s << "Unknown joint type " << joint_type << " specified";
 		  throw std::runtime_error(s.str());
 	  }
-	  // Eventually add a list of valid modes for this joint?
   }
 }
 
@@ -306,7 +316,7 @@ void FRCRobotInterface::registerJointLimits(const hardware_interface::JointHandl
   // Copy position limits if available
   if (joint_limits.has_position_limits)
   {
-    // Slighly reduce the joint limits to prevent floating point errors
+    // Slighly reduce the joint limits to prevent doubleing point errors
     joint_limits.min_position += std::numeric_limits<double>::epsilon();
     joint_limits.max_position -= std::numeric_limits<double>::epsilon();
 
@@ -394,7 +404,7 @@ std::string FRCRobotInterface::printCommandHelper()
   ss << "    setpoint" << std::endl;
   for (std::size_t i = 0; i < num_can_talon_srxs_; ++i)
   {
-	float setpoint;
+	double setpoint;
    	talon_command_[i].get(setpoint);
     ss << "j" << i << ": " << std::fixed << setpoint<< std::endl;
   }
