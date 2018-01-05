@@ -302,6 +302,28 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 	  double active_trajectory_heading = can_talons_[joint_id]->GetActiveTrajectoryHeading();
 	  talon_state_[joint_id].setActiveTrajectoryHeading(active_trajectory_heading);
 
+
+	  // TODO : only do this if mode is motion profile or
+	  // motion magic?
+	  talon_state_[joint_id].setMotionProfileTopLevelBufferCount(can_talons_[joint_id]->GetMotionProfileTopLevelBufferCount());
+	  talon_state_[joint_id].setMotionProfileTopLevelBufferFull(can_talons_[joint_id]->IsMotionProfileTopLevelBufferFull());
+	  ctre::phoenix::motion::MotionProfileStatus talon_status;
+	  can_talons_[joint_id]->GetMotionProfileStatus(talon_status);
+
+	  hardware_interface::MotionProfileStatus internal_status;
+	  internal_status.topBufferRem = talon_status.topBufferRem;
+	  internal_status.topBufferCnt = talon_status.topBufferCnt;
+	  internal_status.btmBufferCnt = talon_status.btmBufferCnt;
+	  internal_status.hasUnderrun = talon_status.hasUnderrun;
+	  internal_status.isUnderrun = talon_status.isUnderrun;
+	  internal_status.activePointValid = talon_status.activePointValid;
+	  internal_status.isLast = talon_status.isLast;
+	  internal_status.profileSlotSelect = talon_status.profileSlotSelect;
+	  internal_status.outputEnable = static_cast<hardware_interface::SetValueMotionProfile>(talon_status.outputEnable);
+
+	  talon_state_[joint_id].setMotionProfileStatus(internal_status);
+
+
 	  // TODO :: Fix me
 	  //talon_state_[joint_id].setFwdLimitSwitch(can_talons_[joint_id]->IsFwdLimitSwitchClosed());
 	  //talon_state_[joint_id].setRevLimitSwitch(can_talons_[joint_id]->IsRevLimitSwitchClosed());
@@ -555,6 +577,41 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 		  talon_state_[joint_id].setContinuousCurrentLimit(continuous_amps);
 		  talon_state_[joint_id].setCurrentLimitEnable(enable);
 	  }
+
+	  // Do this before rest of motion profile stuff
+	  // so it takes effect before starting a buffer?
+	  int motion_control_frame_period;
+	  if (talon_command_[joint_id].motionControlFramePeriodChanged(motion_control_frame_period))
+	  {
+		  can_talons_[joint_id]->ChangeMotionControlFramePeriod(motion_control_frame_period);
+		  talon_state_[joint_id].setMotionControlFramePeriod(motion_control_frame_period);
+	  }
+
+	  if (talon_command_[joint_id].clearMotionProfileTrajectoriesChanged())
+		  can_talons_[joint_id]->ClearMotionProfileTrajectories();
+
+	  if (talon_command_[joint_id].clearMotionProfileHasUnderrunChanged())
+		  can_talons_[joint_id]->ClearMotionProfileHasUnderrun(timeoutMs);
+
+	  std::vector<hardware_interface::TrajectoryPoint> trajectory_points;
+	  
+	  if (talon_command_[joint_id].motionProfileTrajectoriesChanged(trajectory_points))
+	  {
+		  for (auto it = trajectory_points.cbegin(); it != trajectory_points.cend(); ++it)
+		  {
+			  ctre::phoenix::motion::TrajectoryPoint pt;
+			  pt.position = it->position;
+			  pt.velocity = it->velocity;
+			  pt.headingDeg = it->headingRad * 180. / M_PI; 
+			  pt.profileSlotSelect = it->profileSlotSelect;
+			  pt.isLastPoint = it->isLastPoint;
+			  pt.zeroPos = it->zeroPos;
+			  can_talons_[joint_id]->PushMotionProfileTrajectory(pt);
+		  }
+	  }
+
+	  if (talon_command_[joint_id].processMotionProfileBufferChanged())
+		  can_talons_[joint_id]->ProcessMotionProfileBuffer();
 
 	  // Set new motor setpoint if either the mode or
 	  // the setpoint has been changed 
