@@ -142,7 +142,7 @@ public:
   /** \brief Write the command to the robot hardware. */
   virtual void write(ros::Duration &elapsed_time);
 
-  /** \breif Enforce limits for all values before writing */
+  /** \brief Enforce limits for all values before writing */
   virtual void enforceLimits(ros::Duration &period);
  
 protected:
@@ -156,7 +156,12 @@ private:
   bool convertFeedbackDevice(
 		  const hardware_interface::FeedbackDevice input_fd,
 		  ctre::phoenix::motorcontrol::FeedbackDevice &output_fd);
-
+  bool convertLimitSwitchSource(
+		  const hardware_interface::LimitSwitchSource input_ls,
+		  ctre::phoenix::motorcontrol::LimitSwitchSource &output_ls);
+  bool convertLimitSwitchNormal(
+		  const hardware_interface::LimitSwitchNormal input_ls,
+		  ctre::phoenix::motorcontrol::LimitSwitchNormal &output_ls);
 
   std::vector<std::shared_ptr<ctre::phoenix::motorcontrol::can::TalonSRX>> can_talons_;
   std::vector<std::shared_ptr<frc::NidecBrushless>> nidec_brushlesses_;

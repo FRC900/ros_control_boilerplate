@@ -549,6 +549,27 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 		  talon_state_[joint_id].setVoltageCompensationEnable(v_c_enable);
 	  }
 
+	  hardware_interface::LimitSwitchSource internal_local_forward_source;
+	  hardware_interface::LimitSwitchNormal internal_local_forward_normal;
+	  hardware_interface::LimitSwitchSource internal_local_reverse_source;
+	  hardware_interface::LimitSwitchNormal internal_local_reverse_normal;
+	  ctre::phoenix::motorcontrol::LimitSwitchSource talon_local_forward_source;
+	  ctre::phoenix::motorcontrol::LimitSwitchNormal talon_local_forward_normal;
+	  ctre::phoenix::motorcontrol::LimitSwitchSource talon_local_reverse_source;
+	  ctre::phoenix::motorcontrol::LimitSwitchNormal talon_local_reverse_normal;
+	  if (talon_command_[joint_id].limitSwitchesSourceChanged(internal_local_forward_source, internal_local_forward_normal,
+														      internal_local_reverse_source, internal_local_reverse_normal) &&
+			  convertLimitSwitchSource(internal_local_forward_source, talon_local_forward_source) &&
+			  convertLimitSwitchNormal(internal_local_forward_normal, talon_local_forward_normal) &&
+			  convertLimitSwitchSource(internal_local_reverse_source, talon_local_reverse_source) &&
+			  convertLimitSwitchNormal(internal_local_reverse_normal, talon_local_reverse_normal) )
+	  {
+		  can_talons_[joint_id]->ConfigForwardLimitSwitchSource(talon_local_forward_source, talon_local_forward_normal, timeoutMs);
+		  can_talons_[joint_id]->ConfigReverseLimitSwitchSource(talon_local_reverse_source, talon_local_reverse_normal, timeoutMs);
+		  talon_state_[joint_id].setForwardLimitSwitchSource(internal_local_forward_source, internal_local_forward_normal);
+		  talon_state_[joint_id].setReverseLimitSwitchSource(internal_local_reverse_source, internal_local_reverse_normal);
+	  }
+
 	  double softlimit_forward_threshold;
 	  bool softlimit_forward_enable;
 	  double softlimit_reverse_threshold;
@@ -822,6 +843,54 @@ bool FRCRobotHWInterface::convertFeedbackDevice(
 			return false;
 	}
 	return true;
+}
+
+bool FRCRobotHWInterface::convertLimitSwitchSource(
+		const hardware_interface::LimitSwitchSource input_ls,
+		ctre::phoenix::motorcontrol::LimitSwitchSource &output_ls)
+{
+	switch (input_ls)
+	{
+		case hardware_interface::LimitSwitchSource_FeedbackConnector:
+			output_ls = ctre::phoenix::motorcontrol::LimitSwitchSource_FeedbackConnector;
+			break;
+		case hardware_interface::LimitSwitchSource_RemoteTalonSRX:
+			output_ls = ctre::phoenix::motorcontrol::LimitSwitchSource_RemoteTalonSRX;
+			break;
+		case hardware_interface::LimitSwitchSource_RemoteCANifier:
+			output_ls = ctre::phoenix::motorcontrol::LimitSwitchSource_RemoteCANifier;
+			break;
+		case hardware_interface::LimitSwitchSource_Deactivated:
+			output_ls = ctre::phoenix::motorcontrol::LimitSwitchSource_Deactivated;
+			break;
+		default:
+			ROS_WARN("Unknown limit switch source seen in HW interface");
+			return false;
+	}
+	return true;
+}
+
+bool FRCRobotHWInterface::convertLimitSwitchNormal(
+		const hardware_interface::LimitSwitchNormal input_ls,
+		ctre::phoenix::motorcontrol::LimitSwitchNormal &output_ls)
+{
+	switch(input_ls)
+	{
+		case hardware_interface::LimitSwitchNormal_NormallyOpen:
+			output_ls = ctre::phoenix::motorcontrol::LimitSwitchNormal_NormallyOpen;
+			break;
+		case hardware_interface::LimitSwitchNormal_NormallyClosed:
+			output_ls = ctre::phoenix::motorcontrol::LimitSwitchNormal_NormallyClosed;
+			break;
+		case hardware_interface::LimitSwitchNormal_Disabled:
+			output_ls = ctre::phoenix::motorcontrol::LimitSwitchNormal_Disabled;
+			break;
+		default:
+			ROS_WARN("Unknown limit switch normal seen in HW interface");
+			return false;
+	}
+	return true;
+
 }
 
 }  // namespace
