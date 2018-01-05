@@ -329,6 +329,7 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
   for (size_t i = 0; i < num_pwm_; i++)
   {
   	//Nothing to read
+	//// TODO : Add a read of state just so we can monitor what's going on in the code
   }
   */
   
@@ -470,7 +471,6 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 		  // dynamically so read it in read() above instead
 	  }
 
-
 	  double closed_loop_ramp;
 	  double open_loop_ramp;
 	  double peak_output_forward;
@@ -516,6 +516,31 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 		  talon_state_[joint_id].setVoltageMeasurementFilter(v_measurement_filter);
 		  talon_state_[joint_id].setVoltageCompensationEnable(v_c_enable);
 	  }
+
+	  double softlimit_forward_threshold;
+	  bool softlimit_forward_enable;
+	  double softlimit_reverse_threshold;
+	  bool softlimit_reverse_enable;
+	  bool softlimit_override_enable;
+	  if (talon_command_[joint_id].SoftLimitChanged(softlimit_forward_threshold,
+												    softlimit_forward_enable,
+												    softlimit_reverse_threshold,
+													softlimit_reverse_enable,
+													softlimit_override_enable))
+	  {
+		  //TODO : scale forward and reverse thresholds
+		  can_talons_[joint_id]->ConfigForwardSoftLimitThreshold(softlimit_forward_threshold, timeoutMs);
+		  can_talons_[joint_id]->ConfigForwardSoftLimitEnable(softlimit_forward_enable, timeoutMs);
+		  can_talons_[joint_id]->ConfigReverseSoftLimitThreshold(softlimit_reverse_threshold, timeoutMs);
+		  can_talons_[joint_id]->ConfigReverseSoftLimitEnable(softlimit_reverse_enable, timeoutMs);
+		  can_talons_[joint_id]->OverrideSoftLimitsEnable(softlimit_override_enable);
+		  talon_state_[joint_id].setForwardSoftLimitThreshold(softlimit_forward_threshold);
+		  talon_state_[joint_id].setForwardSoftLimitEnable(softlimit_forward_enable);
+		  talon_state_[joint_id].setReverseSoftLimitThreshold(softlimit_reverse_threshold);
+		  talon_state_[joint_id].setReverseSoftLimitEnable(softlimit_reverse_enable);
+		  talon_state_[joint_id].setOverrideSoftLimitsEnable(softlimit_override_enable);
+	  }
+
 	  int peak_amps;
 	  int peak_msec;
 	  int continuous_amps;

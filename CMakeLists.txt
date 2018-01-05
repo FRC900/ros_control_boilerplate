@@ -100,7 +100,6 @@ if (DEFINED CMAKE_TOOLCHAIN_FILE)
 		src/generic_hw_control_loop.cpp
 	)
 
-    # Switch between 2017 and 2018 beta wpilib code
     include_directories(
       $ENV{HOME}/wpilib/user/cpp/include
       $ENV{HOME}/wpilib/cpp/current/include
