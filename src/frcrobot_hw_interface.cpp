@@ -274,6 +274,9 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 	  double output_current = can_talons_[joint_id]->GetOutputCurrent();
 	  talon_state_[joint_id].setOutputCurrent(output_current);
 
+	  double temperature = can_talons_[joint_id]->GetTemperature();
+	  talon_state_[joint_id].setTemperature(temperature);
+
 	  // Scale this from native units 
 	  double scale = 1.;
 
@@ -578,6 +581,17 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 		  talon_state_[joint_id].setCurrentLimitEnable(enable);
 	  }
 
+	  double motion_cruise_velocity;
+	  double motion_acceleration;
+	  if (talon_command_[joint_id].motionCruiseChanged(motion_cruise_velocity, motion_acceleration))
+	  {
+		  talon_state_[joint_id].setMotionCruiseVelocity(motion_cruise_velocity);
+		  talon_state_[joint_id].setMotionAcceleration(motion_acceleration);
+		  // TODO : covert from rad/sec to native units
+
+		  can_talons_[joint_id]->ConfigMotionCruiseVelocity(motion_cruise_velocity, timeoutMs);
+		  can_talons_[joint_id]->ConfigMotionAcceleration(motion_acceleration, timeoutMs);
+	  }
 	  // Do this before rest of motion profile stuff
 	  // so it takes effect before starting a buffer?
 	  int motion_control_frame_period;
