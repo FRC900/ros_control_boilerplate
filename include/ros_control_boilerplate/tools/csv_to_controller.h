@@ -56,37 +56,37 @@ static const double RECORD_RATE_HZ = 100.0;  // times per second to record
 
 class CSVToController
 {
-public:
-  /**
-   * \brief Constructor
-   */
-  CSVToController(const std::string& joint_trajectory_action,
-                  const std::string& controller_state_topic);
+	public:
+		/**
+		 * \brief Constructor
+		 */
+		CSVToController(const std::string &joint_trajectory_action,
+						const std::string &controller_state_topic);
 
-  /** \brief Callback from ROS message */
-  void stateCB(const control_msgs::JointTrajectoryControllerState::ConstPtr& state);
+		/** \brief Callback from ROS message */
+		void stateCB(const control_msgs::JointTrajectoryControllerState::ConstPtr &state);
 
-  void printPoint(trajectory_msgs::JointTrajectoryPoint &point);
+		void printPoint(trajectory_msgs::JointTrajectoryPoint &point);
 
-  // Start the data collection
-  void loadAndRunCSV(const std::string& file_name);
+		// Start the data collection
+		void loadAndRunCSV(const std::string &file_name);
 
-private:
-  // A shared node handle
-  ros::NodeHandle nh_;
+	private:
+		// A shared node handle
+		ros::NodeHandle nh_;
 
-  // Listener to state of controller
-  ros::Subscriber state_sub_;
+		// Listener to state of controller
+		ros::Subscriber state_sub_;
 
-  // Action
-  actionlib::SimpleActionClient<control_msgs::FollowJointTrajectoryAction> joint_trajectory_action_;
+		// Action
+		actionlib::SimpleActionClient<control_msgs::FollowJointTrajectoryAction> joint_trajectory_action_;
 
-  // Where to save the CSV
-  std::string file_name_;
-  std::string controller_state_topic_;
+		// Where to save the CSV
+		std::string file_name_;
+		std::string controller_state_topic_;
 
-  // Cache of last recieved state
-  control_msgs::JointTrajectoryControllerState current_state_;
+		// Cache of last recieved state
+		control_msgs::JointTrajectoryControllerState current_state_;
 
 };  // end class
 

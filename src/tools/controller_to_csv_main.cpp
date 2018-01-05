@@ -44,29 +44,29 @@
 DEFINE_string(csv_path, "/tmp/recorded_trajectory_1.csv", "File location to save recoded data to");
 DEFINE_string(topic, "/robot/position_trajectory_controller/state", "ROS topic to subscribe to");
 
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
-  google::SetVersionString("0.0.1");
-  google::SetUsageMessage("Utility to record controller topic to a CSV");
-  google::ParseCommandLineFlags(&argc, &argv, true);
+	google::SetVersionString("0.0.1");
+	google::SetUsageMessage("Utility to record controller topic to a CSV");
+	google::ParseCommandLineFlags(&argc, &argv, true);
 
-  ros::init(argc, argv, "controller_to_csv", ros::init_options::AnonymousName);
-  ROS_INFO_STREAM_NAMED("main", "Starting ControllerToCSV...");
+	ros::init(argc, argv, "controller_to_csv", ros::init_options::AnonymousName);
+	ROS_INFO_STREAM_NAMED("main", "Starting ControllerToCSV...");
 
-  // Allow the action server to recieve and send ros messages
-  ros::AsyncSpinner spinner(2);
-  spinner.start();
+	// Allow the action server to recieve and send ros messages
+	ros::AsyncSpinner spinner(2);
+	spinner.start();
 
-  const std::string topic = FLAGS_topic;
-  const std::string csv_path = FLAGS_csv_path;
-  ros_control_boilerplate::ControllerToCSV converter(topic);
-  converter.startRecording(csv_path);
+	const std::string topic = FLAGS_topic;
+	const std::string csv_path = FLAGS_csv_path;
+	ros_control_boilerplate::ControllerToCSV converter(topic);
+	converter.startRecording(csv_path);
 
-  ROS_INFO_STREAM_NAMED("main","Type Ctrl-C to end and save");
-  ros::spin();
+	ROS_INFO_STREAM_NAMED("main", "Type Ctrl-C to end and save");
+	ros::spin();
 
-  ROS_INFO_STREAM_NAMED("main", "Shutting down.");
-  ros::shutdown();
+	ROS_INFO_STREAM_NAMED("main", "Shutting down.");
+	ros::shutdown();
 
-  return 0;
+	return 0;
 }

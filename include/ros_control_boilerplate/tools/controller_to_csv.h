@@ -50,65 +50,65 @@ namespace ros_control_boilerplate
 
 class ControllerToCSV
 {
-public:
-  /**
-   * \brief Constructor
-   * \param topic - ROS message to listen to from controller
-   */
-  ControllerToCSV(const std::string& topic);
+	public:
+		/**
+		 * \brief Constructor
+		 * \param topic - ROS message to listen to from controller
+		 */
+		ControllerToCSV(const std::string &topic);
 
-  /** \brief Destructor */
-  ~ControllerToCSV();
+		/** \brief Destructor */
+		~ControllerToCSV();
 
-  /** \brief Whether to record at a specific frequency, or record all incoming data */
-  bool recordAll();
+		/** \brief Whether to record at a specific frequency, or record all incoming data */
+		bool recordAll();
 
-  /** \brief Start the data collection */
-  void startRecording(const std::string& file_name);
+		/** \brief Start the data collection */
+		void startRecording(const std::string &file_name);
 
-  /** \brief End recording */
-  void stopRecording();
+		/** \brief End recording */
+		void stopRecording();
 
-private:
+	private:
 
-  /** \brief Send all resulting data to file */
-  bool writeToFile();
+		/** \brief Send all resulting data to file */
+		bool writeToFile();
 
-  /** \brief Callback from ROS message */
-  void stateCB(const control_msgs::JointTrajectoryControllerState::ConstPtr& state);
+		/** \brief Callback from ROS message */
+		void stateCB(const control_msgs::JointTrajectoryControllerState::ConstPtr &state);
 
-  /** \brief Recieve data from controller via ROS message */
-  void update(const ros::TimerEvent& e);
+		/** \brief Recieve data from controller via ROS message */
+		void update(const ros::TimerEvent &e);
 
-  /** \brief Check if topic has been connected to successfully */
-  bool waitForSubscriber(const ros::Subscriber &sub, const double &wait_time = 10.0);
+		/** \brief Check if topic has been connected to successfully */
+		bool waitForSubscriber(const ros::Subscriber &sub, const double &wait_time = 10.0);
 
-  // Class name
-  std::string name_ = "controller_to_csv";
+		// Class name
+		std::string name_ = "controller_to_csv";
 
-  // A shared node handle
-  ros::NodeHandle nh_;
+		// A shared node handle
+		ros::NodeHandle nh_;
 
-  // Show status info on first update
-  bool first_update_;
-  bool recording_started_;
+		// Show status info on first update
+		bool first_update_;
+		bool recording_started_;
 
-  // Listener to state of controller
-  ros::Subscriber state_sub_;
-  double record_hz_; // how often to record the latest incoming data. if zero, record all
+		// Listener to state of controller
+		ros::Subscriber state_sub_;
+		double record_hz_; // how often to record the latest incoming data. if zero, record all
 
-  // Where to save the CSV
-  std::string file_name_;
+		// Where to save the CSV
+		std::string file_name_;
 
-  // Buffer of controller state data
-  std::vector<control_msgs::JointTrajectoryControllerState> states_;
-  std::vector<ros::Time> timestamps_;
+		// Buffer of controller state data
+		std::vector<control_msgs::JointTrajectoryControllerState> states_;
+		std::vector<ros::Time> timestamps_;
 
-  // Cache of last recieved state
-  control_msgs::JointTrajectoryControllerState current_state_;
+		// Cache of last recieved state
+		control_msgs::JointTrajectoryControllerState current_state_;
 
-  // How often to sample the state
-  ros::Timer non_realtime_loop_;
+		// How often to sample the state
+		ros::Timer non_realtime_loop_;
 
 };  // end class
 

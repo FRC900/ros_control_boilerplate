@@ -42,8 +42,8 @@ For a more detailed simulation example, see sim_hw_interface.cpp
 namespace frcrobot_control
 {
 
-FRCRobotSimInterface::FRCRobotSimInterface(ros::NodeHandle &nh, 
-		                                   urdf::Model *urdf_model)
+FRCRobotSimInterface::FRCRobotSimInterface(ros::NodeHandle &nh,
+		urdf::Model *urdf_model)
 	: ros_control_boilerplate::FRCRobotInterface(nh, urdf_model)
 {
 	// Loop through the list of joint names
@@ -58,8 +58,8 @@ FRCRobotSimInterface::FRCRobotSimInterface(ros::NodeHandle &nh,
 	for (size_t i = 0; i < can_talon_srx_names_.size(); i++)
 	{
 		ROS_INFO_STREAM_NAMED("frcrobot_sim_interface",
-				"Loading joint " << can_talon_srx_names_[i] <<
-				" as CAN id " << can_talon_srx_can_ids_[i]);
+							  "Loading joint " << can_talon_srx_names_[i] <<
+							  " as CAN id " << can_talon_srx_can_ids_[i]);
 
 		// Need config information for each talon
 		// Should probably be part of YAML params for controller
@@ -83,10 +83,10 @@ FRCRobotSimInterface::FRCRobotSimInterface(ros::NodeHandle &nh,
 	// TODO : assert nidec_brushles_names_.size() == nidec_brushles_xxx_channels_.size()
 	for (size_t i = 0; i < nidec_brushless_names_.size(); i++)
 	{
-		ROS_INFO_STREAM_NAMED("frcrobot_sim_interface", 
-				"Loading joint " << nidec_brushless_names_[i] <<
-				" as PWM channel " << nidec_brushless_pwm_channels_[i] <<
-				" / DIO channel " << nidec_brushless_dio_channels_[i]);
+		ROS_INFO_STREAM_NAMED("frcrobot_sim_interface",
+							  "Loading joint " << nidec_brushless_names_[i] <<
+							  " as PWM channel " << nidec_brushless_pwm_channels_[i] <<
+							  " / DIO channel " << nidec_brushless_dio_channels_[i]);
 	}
 	ROS_INFO_NAMED("frcrobot_sim_interface", "FRCRobotSimInterface Ready.");
 }
@@ -105,9 +105,9 @@ void FRCRobotSimInterface::write(ros::Duration &elapsed_time)
 	// Maybe do a eStop / enabled check instead?
 	//enforceLimits(elapsed_time);
 
-	//ROS_INFO_STREAM_THROTTLE(1, 
-			//std::endl << std::string(__FILE__) << ":" << __LINE__ << 
-			//std::endl << "Command" << std::endl << printCommandHelper());
+	//ROS_INFO_STREAM_THROTTLE(1,
+	//std::endl << std::string(__FILE__) << ":" << __LINE__ <<
+	//std::endl << "Command" << std::endl << printCommandHelper());
 
 	for (std::size_t joint_id = 0; joint_id < num_can_talon_srxs_; ++joint_id)
 	{
@@ -117,7 +117,7 @@ void FRCRobotSimInterface::write(ros::Duration &elapsed_time)
 		if (talon_command_[joint_id].newMode(new_mode))
 			talon_state_[joint_id].setTalonMode(new_mode);
 		int slot;
-		if(talon_command_[joint_id].slotChanged(slot))
+		if (talon_command_[joint_id].slotChanged(slot))
 		{
 			ROS_INFO_STREAM("Updated joint " << joint_id << " PIDF slot to " << slot << std::endl);
 			talon_state_[joint_id].setSlot(slot);
@@ -130,8 +130,9 @@ void FRCRobotSimInterface::write(ros::Duration &elapsed_time)
 		int   iz;
 		int   allowable_closed_loop_error;
 		double max_integral_accumulator;
-		for (int j = 0; j < 2; j++) {
-			if(talon_command_[joint_id].pidfChanged(p, i, d, f, iz, allowable_closed_loop_error, max_integral_accumulator, j))
+		for (int j = 0; j < 2; j++)
+		{
+			if (talon_command_[joint_id].pidfChanged(p, i, d, f, iz, allowable_closed_loop_error, max_integral_accumulator, j))
 			{
 				ROS_INFO_STREAM("Updated joint " << joint_id << " PIDF slot " << j << " config values" << std::endl);
 				talon_state_[joint_id].setPidfP(p, j);
@@ -139,24 +140,24 @@ void FRCRobotSimInterface::write(ros::Duration &elapsed_time)
 				talon_state_[joint_id].setPidfD(d, j);
 				talon_state_[joint_id].setPidfF(f, j);
 				talon_state_[joint_id].setPidfIzone(iz, j);
-			talon_state_[joint_id].setAllowableClosedLoopError(allowable_closed_loop_error, j);
-			talon_state_[joint_id].setMaxIntegralAccumulator(max_integral_accumulator, j);
-				
+				talon_state_[joint_id].setAllowableClosedLoopError(allowable_closed_loop_error, j);
+				talon_state_[joint_id].setMaxIntegralAccumulator(max_integral_accumulator, j);
+
 			}
 		}
 		bool invert;
 		bool sensor_phase;
-		if(talon_command_[joint_id].invertChanged(invert, sensor_phase))
+		if (talon_command_[joint_id].invertChanged(invert, sensor_phase))
 		{
 			talon_state_[joint_id].setInvert(invert);
 			talon_state_[joint_id].setSensorPhase(sensor_phase);
 		}
-		
+
 		// Follower doesn't need to be updated - used the
 		// followed talon for state instead
 		if (talon_state_[joint_id].getTalonMode() == hardware_interface::TalonMode_Follower)
 			continue;
-		
+
 		// Assume instant acceleration for now
 		double speed;
 

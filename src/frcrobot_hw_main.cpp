@@ -39,26 +39,26 @@
 #include <ros_control_boilerplate/generic_hw_control_loop.h>
 #include <ros_control_boilerplate/frcrobot_hw_interface.h>
 
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
-  ros::init(argc, argv, "frcrobot_hw_interface");
-  ros::NodeHandle nh;
+	ros::init(argc, argv, "frcrobot_hw_interface");
+	ros::NodeHandle nh;
 
-  // NOTE: We run the ROS loop in a separate thread as external calls such
-  // as service callbacks to load controllers can block the (main) control loop
-  ros::AsyncSpinner spinner(2);
-  spinner.start();
+	// NOTE: We run the ROS loop in a separate thread as external calls such
+	// as service callbacks to load controllers can block the (main) control loop
+	ros::AsyncSpinner spinner(2);
+	spinner.start();
 
-  // Create the hardware interface specific to your robot
-  boost::shared_ptr<frcrobot_control::FRCRobotHWInterface> frcrobot_hw_interface
-    (new frcrobot_control::FRCRobotHWInterface(nh));
-  frcrobot_hw_interface->init();
+	// Create the hardware interface specific to your robot
+	boost::shared_ptr<frcrobot_control::FRCRobotHWInterface> frcrobot_hw_interface
+	(new frcrobot_control::FRCRobotHWInterface(nh));
+	frcrobot_hw_interface->init();
 
-  // Start the control loop
-  ros_control_boilerplate::GenericHWControlLoop control_loop(nh, frcrobot_hw_interface);
+	// Start the control loop
+	ros_control_boilerplate::GenericHWControlLoop control_loop(nh, frcrobot_hw_interface);
 
-  // Wait until shutdown signal recieved
-  ros::waitForShutdown();
+	// Wait until shutdown signal recieved
+	ros::waitForShutdown();
 
-  return 0;
+	return 0;
 }

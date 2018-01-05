@@ -54,125 +54,74 @@ namespace frcrobot_control
 {
 class ROSIterativeRobot : public frc::IterativeRobot
 {
-public: 
-	void StartCompetition(void) 
-	{
-		RobotInit();
-		HAL_ObserveUserProgramStarting();
-	}
-	void OneIteration(void)
-	{
-		// wait for driver station data so the loop doesn't hog the CPU
-		DriverStation::GetInstance().WaitForData();
-		LoopFunc(); //-- added for 2018, code from that copied below
-#if 0
-		// Call the appropriate function depending upon the current robot mode
-		if (IsDisabled()) {
-			// call DisabledInit() if we are now just entering disabled mode from
-			// either a different mode or from power-on
-			if (m_lastMode != Mode::kDisabled) {
-				LiveWindow::GetInstance()->SetEnabled(false);
-				DisabledInit();
-				m_lastMode = Mode::kDisabled;
-			}
-			HAL_ObserveUserProgramDisabled();
-			DisabledPeriodic();
-		} else if (IsAutonomous()) {
-			// call AutonomousInit() if we are now just entering autonomous mode from
-			// either a different mode or from power-on
-			if (m_lastMode != Mode::kAutonomous) {
-				LiveWindow::GetInstance()->SetEnabled(false);
-				AutonomousInit();
-				m_lastMode = Mode::kAutonomous;
-			}
-			HAL_ObserveUserProgramAutonomous();
-			AutonomousPeriodic();
-		} else if (IsOperatorControl()) {
-			// call TeleopInit() if we are now just entering teleop mode from
-			// either a different mode or from power-on
-			if (m_lastMode != Mode::kTeleop) {
-				LiveWindow::GetInstance()->SetEnabled(false);
-				TeleopInit();
-				m_lastMode = Mode::kTeleop;
-				Scheduler::GetInstance()->SetEnabled(true);
-			}
-			HAL_ObserveUserProgramTeleop();
-			TeleopPeriodic();
-		} else {
-			// call TestInit() if we are now just entering test mode from
-			// either a different mode or from power-on
-			if (m_lastMode != Mode::kTest) {
-				LiveWindow::GetInstance()->SetEnabled(true);
-				TestInit();
-				m_lastMode = Mode::kTest;
-			}
-			HAL_ObserveUserProgramTest();
-			TestPeriodic();
+	public:
+		void StartCompetition(void)
+		{
+			RobotInit();
+			HAL_ObserveUserProgramStarting();
 		}
-		RobotPeriodic();
-#endif
-	}
-private:
-  //enum class Mode { kNone, kDisabled, kAutonomous, kTeleop, kTest };
-
-  //Mode m_lastMode = Mode::kNone;
-
+		void OneIteration(void)
+		{
+			// wait for driver station data so the loop doesn't hog the CPU
+			DriverStation::GetInstance().WaitForData();
+			LoopFunc();
+		}
 };
 
 /// \brief Hardware interface for a robot
 class FRCRobotHWInterface : public ros_control_boilerplate::FRCRobotInterface
 {
-public:
-  /**
-   * \brief Constructor
-   * \param nh - Node handle for topics.
-   */
-  FRCRobotHWInterface(ros::NodeHandle& nh, urdf::Model* urdf_model = NULL);
-  ~FRCRobotHWInterface();
+	public:
+		/**
+		 * \brief Constructor
+		 * \param nh - Node handle for topics.
+		 */
+		FRCRobotHWInterface(ros::NodeHandle &nh, urdf::Model *urdf_model = NULL);
+		~FRCRobotHWInterface();
 
-  /** \brief Initialize the hardware interface */
-  virtual void init(void);
+		/** \brief Initialize the hardware interface */
+		virtual void init(void);
 
-  /** \brief Read the state from the robot hardware. */
-  virtual void read(ros::Duration &elapsed_time);
+		/** \brief Read the state from the robot hardware. */
+		virtual void read(ros::Duration &elapsed_time);
 
-  virtual double getRadiansConversionFactor(hardware_interface::FeedbackDevice encoder_feedback, int joint_id);
-  virtual double getRadiansPerSecConversionFactor(hardware_interface::FeedbackDevice encoder_feedback, int joint_id);
+		virtual double getRadiansConversionFactor(hardware_interface::FeedbackDevice encoder_feedback, int joint_id);
+		virtual double getRadiansPerSecConversionFactor(hardware_interface::FeedbackDevice encoder_feedback, int joint_id);
 
-  /** \brief Write the command to the robot hardware. */
-  virtual void write(ros::Duration &elapsed_time);
+		/** \brief Write the command to the robot hardware. */
+		virtual void write(ros::Duration &elapsed_time);
 
-  /** \brief Enforce limits for all values before writing */
-  virtual void enforceLimits(ros::Duration &period);
- 
-protected:
-  void hal_keepalive_thread(void);
+		/** \brief Enforce limits for all values before writing */
+		virtual void enforceLimits(ros::Duration &period);
 
-private:
-  bool convertControlMode(const hardware_interface::TalonMode input_mode,
-						  ctre::phoenix::motorcontrol::ControlMode &output_mode);
-  bool convertNeutralMode(const hardware_interface::NeutralMode input_mode, 
-		  ctre::phoenix::motorcontrol::NeutralMode &output_mode);
-  bool convertFeedbackDevice(
-		  const hardware_interface::FeedbackDevice input_fd,
-		  ctre::phoenix::motorcontrol::FeedbackDevice &output_fd);
-  bool convertLimitSwitchSource(
-		  const hardware_interface::LimitSwitchSource input_ls,
-		  ctre::phoenix::motorcontrol::LimitSwitchSource &output_ls);
-  bool convertLimitSwitchNormal(
-		  const hardware_interface::LimitSwitchNormal input_ls,
-		  ctre::phoenix::motorcontrol::LimitSwitchNormal &output_ls);
+	protected:
+		void hal_keepalive_thread(void);
 
-  std::vector<std::shared_ptr<ctre::phoenix::motorcontrol::can::TalonSRX>> can_talons_;
-  std::vector<std::shared_ptr<frc::NidecBrushless>> nidec_brushlesses_;
-  std::vector<std::shared_ptr<frc::DigitalInput>> digital_inputs_;
-  std::vector<std::shared_ptr<frc::DigitalOutput>> digital_outputs_;
-  std::vector<std::shared_ptr<frc::SafePWM>> PWMs_;
+	private:
+		bool convertControlMode(const hardware_interface::TalonMode input_mode,
+								ctre::phoenix::motorcontrol::ControlMode &output_mode);
+		bool convertNeutralMode(const hardware_interface::NeutralMode input_mode,
+								ctre::phoenix::motorcontrol::NeutralMode &output_mode);
+		bool convertFeedbackDevice(
+			const hardware_interface::FeedbackDevice input_fd,
+			ctre::phoenix::motorcontrol::FeedbackDevice &output_fd);
+		bool convertLimitSwitchSource(
+			const hardware_interface::LimitSwitchSource input_ls,
+			ctre::phoenix::motorcontrol::LimitSwitchSource &output_ls);
+		bool convertLimitSwitchNormal(
+			const hardware_interface::LimitSwitchNormal input_ls,
+			ctre::phoenix::motorcontrol::LimitSwitchNormal &output_ls);
 
-  std::thread hal_thread_;
-  bool        run_hal_thread_;
+		std::vector<std::shared_ptr<ctre::phoenix::motorcontrol::can::TalonSRX>> can_talons_;
+		std::vector<std::shared_ptr<frc::NidecBrushless>> nidec_brushlesses_;
+		std::vector<std::shared_ptr<frc::DigitalInput>> digital_inputs_;
+		std::vector<std::shared_ptr<frc::DigitalOutput>> digital_outputs_;
+		std::vector<std::shared_ptr<frc::SafePWM>> PWMs_;
 
-  ROSIterativeRobot robot_;
+		std::thread hal_thread_;
+		bool        run_hal_thread_;
+
+		ROSIterativeRobot robot_;
 
 };  // class
 

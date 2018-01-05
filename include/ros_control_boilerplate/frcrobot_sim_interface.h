@@ -52,7 +52,7 @@ class FRCRobotSimInterface : public ros_control_boilerplate::FRCRobotInterface
 		 * \brief Constructor
 		 * \param nh - Node handle for topics.
 		 */
-		FRCRobotSimInterface(ros::NodeHandle& nh, urdf::Model* urdf_model = NULL);
+		FRCRobotSimInterface(ros::NodeHandle &nh, urdf::Model *urdf_model = NULL);
 
 		/** \brief Read the state from the robot hardware. */
 		virtual void read(ros::Duration &elapsed_time);
@@ -63,7 +63,7 @@ class FRCRobotSimInterface : public ros_control_boilerplate::FRCRobotInterface
 		/** \breif Enforce limits for all values before writing */
 		virtual void enforceLimits(ros::Duration &period);
 	private:
-		// Desired kMode setting, or -1 if no need to change this 
+		// Desired kMode setting, or -1 if no need to change this
 		// time through the update loop
 		std::vector<int> joint_mode_command;
 
