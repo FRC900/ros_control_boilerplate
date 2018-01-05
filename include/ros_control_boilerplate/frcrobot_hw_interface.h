@@ -153,6 +153,10 @@ private:
 						  ctre::phoenix::motorcontrol::ControlMode &output_mode);
   bool convertNeutralMode(const hardware_interface::NeutralMode input_mode, 
 		  ctre::phoenix::motorcontrol::NeutralMode &output_mode);
+  bool convertFeedbackDevice(
+		  const hardware_interface::FeedbackDevice input_fd,
+		  ctre::phoenix::motorcontrol::FeedbackDevice &output_fd);
+
 
   std::vector<std::shared_ptr<ctre::phoenix::motorcontrol::can::TalonSRX>> can_talons_;
   std::vector<std::shared_ptr<frc::NidecBrushless>> nidec_brushlesses_;

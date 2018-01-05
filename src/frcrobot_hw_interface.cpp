@@ -373,8 +373,8 @@ double FRCRobotHWInterface::getRadiansConversionFactor(hardware_interface::Feedb
 		case hardware_interface::FeedbackDevice_Tachometer:
 		case hardware_interface::FeedbackDevice_SensorSum:
 		case hardware_interface::FeedbackDevice_SensorDifference:
-		case hardware_interface::FeedbackDevice_Inertial:
-		case hardware_interface::FeedbackDevice_RemoteSensor:
+		case hardware_interface::FeedbackDevice_RemoteSensor0:
+		case hardware_interface::FeedbackDevice_RemoteSensor1:
 		case hardware_interface::FeedbackDevice_SoftwareEmulatedSensor:
 			ROS_WARN_STREAM("Unable to convert units.");
 			return 1;
@@ -396,8 +396,8 @@ double FRCRobotHWInterface::getRadiansPerSecConversionFactor(hardware_interface:
 		case hardware_interface::FeedbackDevice_Tachometer:
 		case hardware_interface::FeedbackDevice_SensorSum:
 		case hardware_interface::FeedbackDevice_SensorDifference:
-		case hardware_interface::FeedbackDevice_Inertial:
-		case hardware_interface::FeedbackDevice_RemoteSensor:
+		case hardware_interface::FeedbackDevice_RemoteSensor0:
+		case hardware_interface::FeedbackDevice_RemoteSensor1:
 		case hardware_interface::FeedbackDevice_SoftwareEmulatedSensor:
 			ROS_WARN_STREAM("Unable to convert units.");
 			return 1;
@@ -430,6 +430,15 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 
 		  can_talons_[joint_id]->SelectProfileSlot(slot, timeoutMs);
 		  talon_state_[joint_id].setSlot(slot);
+	  }
+
+	  hardware_interface::FeedbackDevice internal_feedback_device;
+	  ctre::phoenix::motorcontrol::FeedbackDevice talon_feedback_device;
+	  if (talon_command_[joint_id].encoderFeedbackChanged(internal_feedback_device) &&
+		  convertFeedbackDevice(internal_feedback_device, talon_feedback_device))
+	  {
+		  can_talons_[joint_id]->ConfigSelectedFeedbackSensor(talon_feedback_device, pidIdx, timeoutMs);
+		  talon_state_[joint_id].setEncoderFeedback(internal_feedback_device);
 	  }
 
 	  double p;
@@ -772,6 +781,46 @@ bool FRCRobotHWInterface::convertNeutralMode(
 			return false;
 	}
 
+	return true;
+}
+
+bool FRCRobotHWInterface::convertFeedbackDevice(
+		const hardware_interface::FeedbackDevice input_fd,
+		ctre::phoenix::motorcontrol::FeedbackDevice &output_fd)
+{
+	switch(input_fd)
+	{
+		case hardware_interface::FeedbackDevice_QuadEncoder:
+			output_fd = ctre::phoenix::motorcontrol::QuadEncoder;
+			break;
+		case hardware_interface::FeedbackDevice_Analog:
+			output_fd = ctre::phoenix::motorcontrol::Analog;
+			break;
+		case hardware_interface::FeedbackDevice_Tachometer:
+			output_fd = ctre::phoenix::motorcontrol::Tachometer;
+			break;
+		case hardware_interface::FeedbackDevice_PulseWidthEncodedPosition:
+			output_fd = ctre::phoenix::motorcontrol::PulseWidthEncodedPosition;
+			break;
+		case hardware_interface::FeedbackDevice_SensorSum:
+			output_fd = ctre::phoenix::motorcontrol::SensorSum;
+			break;
+		case hardware_interface::FeedbackDevice_SensorDifference:
+			output_fd = ctre::phoenix::motorcontrol::SensorDifference;
+			break;
+		case hardware_interface::FeedbackDevice_RemoteSensor0:
+			output_fd = ctre::phoenix::motorcontrol::RemoteSensor0;
+			break;
+		case hardware_interface::FeedbackDevice_RemoteSensor1:
+			output_fd = ctre::phoenix::motorcontrol::RemoteSensor1;
+			break;
+		case hardware_interface::FeedbackDevice_SoftwareEmulatedSensor:
+			output_fd = ctre::phoenix::motorcontrol::SoftwareEmulatedSensor;
+			break;
+		default:
+			ROS_WARN("Unknown feedback device seen in HW interface");
+			return false;
+	}
 	return true;
 }
 
